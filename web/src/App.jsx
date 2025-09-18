@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
@@ -12,36 +12,88 @@ const REQUIRED_COLUMNS = [
   'JD Link',
 ]
 
-function cleanPhone(raw) {
+// Maps common header variants to canonical keys
+const HEADER_ALIASES = {
+  name: 'Name',
+  fullname: 'Name',
+  candidate: 'Name',
+
+  phone: 'Phone',
+  phonenumber: 'Phone',
+  mobilenumber: 'Phone',
+  mobile: 'Phone',
+  contact: 'Phone',
+
+  currentrole: 'Current Role',
+  role: 'Current Role',
+  designation: 'Current Role',
+
+  keyskills: 'Key Skills',
+  skills: 'Key Skills',
+
+  profilesummary: 'Profile Summary',
+  summary: 'Profile Summary',
+
+  jd: 'JD Link',
+  jdlink: 'JD Link',
+  jobdescription: 'JD Link',
+  joblink: 'JD Link',
+  link: 'JD Link',
+}
+
+function normalizeHeaderKey(key) {
+  const compact = String(key).toLowerCase().replace(/[^a-z0-9]/g, '')
+  return HEADER_ALIASES[compact] || key
+}
+
+function normalizeRowHeaders(row) {
+  const normalized = {}
+  for (const [rawKey, value] of Object.entries(row)) {
+    const targetKey = normalizeHeaderKey(rawKey)
+    normalized[targetKey] = value
+  }
+  return normalized
+}
+
+function cleanPhone(raw, countryCode) {
   if (!raw) return ''
   const digits = String(raw).replace(/\D+/g, '')
   const last10 = digits.slice(-10)
-  return last10 ? `91${last10}` : ''
+  const cc = String(countryCode || '').replace(/\D+/g, '') || '91'
+  return last10 ? `${cc}${last10}` : ''
 }
 
-function generateMessage(row) {
+const DEFAULT_TEMPLATE = [
+  'Dear *{NAME}*,',
+  'I am *Vani, Recruiter at I Knowledge Factory Pvt. Ltd.* – a full-service *digital branding and marketing agency*.',
+  '',
+  'We reviewed your profile on *Naukri Portal* and found it suitable for the role of *{ROLE}*.',
+  '',
+  'If you are open to exploring opportunities with us, please review the *Job Description on our website and apply here*: {JD_LINK}',
+  '',
+  'Once done, I will connect with you to schedule the *screening round*.',
+  '',
+  'Best regards,',
+  '*Vani Jha*',
+  'Talent Acquisition Specialist',
+  '*+91 9665079317*',
+  '*www.ikf.co.in*',
+].join('\n')
+
+function fillTemplate(template, values) {
+  const safe = template || DEFAULT_TEMPLATE
+  return safe
+    .replaceAll('{NAME}', values.name || '')
+    .replaceAll('{ROLE}', values.role || '')
+    .replaceAll('{JD_LINK}', values.jd || '')
+}
+
+function generateMessage(row, template) {
   const name = row['Name']?.toString().trim() || ''
   const role = row['Current Role']?.toString().trim() || ''
   const jd = row['JD Link']?.toString().trim() || ''
 
-  const lines = [
-    `Dear *${name}*,`,
-    `I am *Vani, Recruiter at I Knowledge Factory Pvt. Ltd.* – a full-service *digital branding and marketing agency*.`,
-    '',
-    `We reviewed your profile on *Naukri Portal* and found it suitable for the role of *${role}*.`,
-    '',
-    `If you are open to exploring opportunities with us, please review the *Job Description on our website and apply here*: ${jd}`,
-    '',
-    `Once done, I will connect with you to schedule the *screening round*.`,
-    '',
-    `Best regards,`,
-    `*Vani Jha*`,
-    `Talent Acquisition Specialist`,
-    `*+91 9665079317*`,
-    `*www.ikf.co.in*`,
-  ]
-
-  return lines.join('\n')
+  return fillTemplate(template, { name, role, jd })
 }
 
 function encodeForWhatsApp(text) {
@@ -49,7 +101,7 @@ function encodeForWhatsApp(text) {
 }
 
 function ensureColumns(row) {
-  const normalized = { ...row }
+  const normalized = normalizeRowHeaders({ ...row })
   for (const key of REQUIRED_COLUMNS) {
     if (!(key in normalized)) normalized[key] = ''
   }
@@ -64,14 +116,40 @@ function App() {
   const fileInputRef = useRef(null)
   const dropRef = useRef(null)
 
+  // Smart settings
+  const [countryCode, setCountryCode] = useState('91')
+  const [template, setTemplate] = useState(DEFAULT_TEMPLATE)
+  const [dedupeByPhone, setDedupeByPhone] = useState(true)
+
+  // Load from localStorage
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('hwc_settings') || '{}')
+      if (saved?.countryCode) setCountryCode(String(saved.countryCode))
+      if (saved?.template) setTemplate(String(saved.template))
+      if (typeof saved?.dedupeByPhone === 'boolean') setDedupeByPhone(saved.dedupeByPhone)
+    } catch {}
+  }, [])
+
+  // Persist to localStorage
+  useEffect(() => {
+    const payload = { countryCode, template, dedupeByPhone }
+    try { localStorage.setItem('hwc_settings', JSON.stringify(payload)) } catch {}
+  }, [countryCode, template, dedupeByPhone])
+
   const processed = useMemo(() => {
     const out = []
     const missing = []
+    const seenPhones = new Set()
 
     for (const r of rows) {
       const normalized = ensureColumns(r)
-      const phone = cleanPhone(normalized['Phone'])
-      const message = generateMessage(normalized)
+      const phone = cleanPhone(normalized['Phone'], countryCode)
+      if (dedupeByPhone && phone) {
+        if (seenPhones.has(phone)) continue
+        seenPhones.add(phone)
+      }
+      const message = generateMessage(normalized, template)
       const encoded = encodeForWhatsApp(message)
       const link = phone ? `https://wa.me/${phone}?text=${encoded}` : ''
       const record = {
@@ -85,7 +163,7 @@ function App() {
       if (!normalized['JD Link']) missing.push(record)
     }
     return { out, missing }
-  }, [rows])
+  }, [rows, countryCode, template, dedupeByPhone])
 
   function onFilesSelected(fileList) {
     const file = fileList?.[0]
@@ -154,6 +232,12 @@ function App() {
       },
     ]
     exportCSV(template, 'candidate_template.csv')
+  }
+
+  function copyAllLinks() {
+    const links = processed.out.map(r => r.WhatsApp_Link).filter(Boolean).join('\n')
+    if (!links) return
+    navigator.clipboard.writeText(links)
   }
 
   function onDrop(e) {
@@ -267,6 +351,13 @@ function App() {
                   >
                     Export Missing JD Report
                   </button>
+                  <button
+                    className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-sky-600 hover:bg-sky-700 text-white disabled:opacity-50"
+                    disabled={!processed.out.length}
+                    onClick={copyAllLinks}
+                  >
+                    Copy All Links
+                  </button>
                 </div>
               </div>
 
@@ -298,6 +389,37 @@ function App() {
           </div>
 
           <aside className="space-y-6">
+            <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur">
+              <h3 className="font-semibold mb-2">Settings</h3>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <label className="block text-gray-600 mb-1">Country Code</label>
+                  <input
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="w-full border rounded-lg p-2"
+                    placeholder="e.g. 91"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-600 mb-1">Message Template</label>
+                  <div className="text-xs text-gray-500 mb-1">Use placeholders: {`{NAME}`}, {`{ROLE}`}, {`{JD_LINK}`}</div>
+                  <textarea
+                    value={template}
+                    onChange={(e) => setTemplate(e.target.value)}
+                    className="w-full h-40 border rounded-lg p-2 font-mono"
+                  />
+                </div>
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={dedupeByPhone}
+                    onChange={(e) => setDedupeByPhone(e.target.checked)}
+                  />
+                  <span>Remove duplicates by phone</span>
+                </label>
+              </div>
+            </div>
             <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur">
               <h3 className="font-semibold mb-2">Instructions</h3>
               <ul className="text-sm text-gray-600 list-disc ml-5 space-y-1">

@@ -55,12 +55,17 @@ function normalizeRowHeaders(row) {
   return normalized
 }
 
-function cleanPhone(raw, countryCode) {
+function cleanPhone(raw, countryCode, autoDetectCountry) {
   if (!raw) return ''
   const digits = String(raw).replace(/\D+/g, '')
   const last10 = digits.slice(-10)
+  if (!last10) return ''
+  if (autoDetectCountry && digits.length > 10) {
+    const detected = digits.slice(0, digits.length - 10)
+    if (detected) return `${detected}${last10}`
+  }
   const cc = String(countryCode || '').replace(/\D+/g, '') || '91'
-  return last10 ? `${cc}${last10}` : ''
+  return `${cc}${last10}`
 }
 
 const DEFAULT_TEMPLATE = [
@@ -108,6 +113,14 @@ function ensureColumns(row) {
   return normalized
 }
 
+function normalizeUrlMaybe(urlLike) {
+  const raw = (urlLike ?? '').toString().trim()
+  if (!raw) return ''
+  const cleaned = raw.replace(/\s+/g, '')
+  if (/^https?:\/\//i.test(cleaned)) return cleaned
+  return `https://${cleaned}`
+}
+
 function App() {
   const [rows, setRows] = useState([])
   const [missingJDRows, setMissingJDRows] = useState([])
@@ -120,6 +133,8 @@ function App() {
   const [countryCode, setCountryCode] = useState('91')
   const [template, setTemplate] = useState(DEFAULT_TEMPLATE)
   const [dedupeByPhone, setDedupeByPhone] = useState(true)
+  const [autoDetectCountry, setAutoDetectCountry] = useState(true)
+  const [search, setSearch] = useState('')
 
   // Load from localStorage
   useEffect(() => {
@@ -128,42 +143,58 @@ function App() {
       if (saved?.countryCode) setCountryCode(String(saved.countryCode))
       if (saved?.template) setTemplate(String(saved.template))
       if (typeof saved?.dedupeByPhone === 'boolean') setDedupeByPhone(saved.dedupeByPhone)
+      if (typeof saved?.autoDetectCountry === 'boolean') setAutoDetectCountry(saved.autoDetectCountry)
     } catch {}
   }, [])
 
   // Persist to localStorage
   useEffect(() => {
-    const payload = { countryCode, template, dedupeByPhone }
+    const payload = { countryCode, template, dedupeByPhone, autoDetectCountry }
     try { localStorage.setItem('hwc_settings', JSON.stringify(payload)) } catch {}
-  }, [countryCode, template, dedupeByPhone])
+  }, [countryCode, template, dedupeByPhone, autoDetectCountry])
 
   const processed = useMemo(() => {
     const out = []
     const missing = []
+    const invalid = []
     const seenPhones = new Set()
 
     for (const r of rows) {
       const normalized = ensureColumns(r)
-      const phone = cleanPhone(normalized['Phone'], countryCode)
-      if (dedupeByPhone && phone) {
-        if (seenPhones.has(phone)) continue
-        seenPhones.add(phone)
-      }
-      const message = generateMessage(normalized, template)
-      const encoded = encodeForWhatsApp(message)
-      const link = phone ? `https://wa.me/${phone}?text=${encoded}` : ''
-      const record = {
+      const phone = cleanPhone(normalized['Phone'], countryCode, autoDetectCountry)
+      const jdNorm = normalizeUrlMaybe(normalized['JD Link'])
+      const display = {
         Name: normalized['Name'],
         'Current Role': normalized['Current Role'],
         Phone: phone,
-        'JD Link': normalized['JD Link'],
-        WhatsApp_Link: link,
+        'JD Link': jdNorm,
       }
+      if (!phone) {
+        invalid.push({ ...display, WhatsApp_Link: '' })
+        if (!jdNorm) missing.push({ ...display, WhatsApp_Link: '' })
+        continue
+      }
+      if (dedupeByPhone) {
+        if (seenPhones.has(phone)) continue
+        seenPhones.add(phone)
+      }
+      const message = generateMessage({ ...normalized, 'JD Link': jdNorm }, template)
+      const encoded = encodeForWhatsApp(message)
+      const link = `https://wa.me/${phone}?text=${encoded}`
+      const record = { ...display, WhatsApp_Link: link }
       out.push(record)
-      if (!normalized['JD Link']) missing.push(record)
+      if (!jdNorm) missing.push(record)
     }
-    return { out, missing }
-  }, [rows, countryCode, template, dedupeByPhone])
+
+    // Search filter
+    const q = search.trim().toLowerCase()
+    const filterByQuery = (arr) => !q ? arr : arr.filter(r =>
+      (r['Name'] || '').toString().toLowerCase().includes(q) ||
+      (r['Current Role'] || '').toString().toLowerCase().includes(q)
+    )
+
+    return { out: filterByQuery(out), missing: filterByQuery(missing), invalid: filterByQuery(invalid) }
+  }, [rows, countryCode, template, dedupeByPhone, autoDetectCountry, search])
 
   function onFilesSelected(fileList) {
     const file = fileList?.[0]
@@ -238,6 +269,11 @@ function App() {
     const links = processed.out.map(r => r.WhatsApp_Link).filter(Boolean).join('\n')
     if (!links) return
     navigator.clipboard.writeText(links)
+  }
+
+  function exportInvalidCSV() {
+    if (!processed.invalid.length) return
+    exportCSV(processed.invalid, 'invalid_phone_rows.csv')
   }
 
   function onDrop(e) {
@@ -335,8 +371,17 @@ function App() {
                 <div className="inline-flex rounded-lg bg-amber-100 text-amber-800 text-xs sm:text-sm px-3 py-1">
                   Missing JD: {processed.missing.length}
                 </div>
+                <div className="inline-flex rounded-lg bg-rose-100 text-rose-800 text-xs sm:text-sm px-3 py-1">
+                  Invalid Phone: {processed.invalid.length}
+                </div>
 
                 <div className="ml-auto flex gap-2">
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search name or role"
+                    className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200"
+                  />
                   <button
                     className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
                     disabled={!processed.out.length}
@@ -350,6 +395,13 @@ function App() {
                     onClick={() => exportCSV(processed.missing, 'missing_jd_links.csv')}
                   >
                     Export Missing JD Report
+                  </button>
+                  <button
+                    className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-rose-600 hover:bg-rose-700 text-white disabled:opacity-50"
+                    disabled={!processed.invalid.length}
+                    onClick={exportInvalidCSV}
+                  >
+                    Export Invalid Phones
                   </button>
                   <button
                     className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-sky-600 hover:bg-sky-700 text-white disabled:opacity-50"
@@ -375,15 +427,19 @@ function App() {
                   >
                     Missing JD Links
                   </button>
+                  <button
+                    className={`px-3 py-1 text-xs sm:text-sm rounded-lg ${activeTab === 'invalid' ? 'bg-white shadow text-emerald-700' : 'text-gray-600'}`}
+                    onClick={() => setActiveTab('invalid')}
+                  >
+                    Invalid Phones
+                  </button>
                 </div>
               </div>
 
               <div className="p-3 overflow-x-auto">
-                {activeTab === 'results' ? (
-                  <ResultsTable data={processed.out} />
-                ) : (
-                  <ResultsTable data={processed.missing} />
-                )}
+                {activeTab === 'results' && <ResultsTable data={processed.out} />}
+                {activeTab === 'missing' && <ResultsTable data={processed.missing} />}
+                {activeTab === 'invalid' && <ResultsTable data={processed.invalid} />}
               </div>
             </div>
           </div>
@@ -417,6 +473,14 @@ function App() {
                     onChange={(e) => setDedupeByPhone(e.target.checked)}
                   />
                   <span>Remove duplicates by phone</span>
+                </label>
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={autoDetectCountry}
+                    onChange={(e) => setAutoDetectCountry(e.target.checked)}
+                  />
+                  <span>Auto-detect country code from phone</span>
                 </label>
               </div>
             </div>

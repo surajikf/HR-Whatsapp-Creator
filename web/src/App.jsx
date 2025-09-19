@@ -311,9 +311,9 @@ Talent Acquisition Specialist
                 }}
                 placeholder="Use {Name}, {Current Role}, {JD Link} as placeholders..."
               />
-              <p style={{ fontSize: '12px', color: '#666', marginTop: '5px', marginBottom: 0 }}>
-                Use placeholders: {Name}, {Current Role}, {JD Link}, {Key Skills}, {Profile Summary}
-              </p>
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '5px', marginBottom: 0 }}>
+                  Use placeholders: {'{Name}'}, {'{Current Role}'}, {'{JD Link}'}, {'{Key Skills}'}, {'{Profile Summary}'}
+                </p>
             </div>
 
             {/* Live Preview */}

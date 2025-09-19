@@ -269,10 +269,32 @@ function App() {
                 ) : (
                   <ResultsTable data={processed.missing} />
                 )}
-                  </div>
-                </div>
               </div>
             </div>
+          </div>
+
+          {/* Message Preview Section */}
+          {processed.out.length > 0 && (
+            <div style={{ border: '1px solid #ccc', padding: '20px', marginTop: '20px', borderRadius: '8px' }}>
+              <h3 style={{ marginBottom: '15px' }}>Message Preview</h3>
+              <div style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px', border: '1px solid #ddd' }}>
+                <pre style={{ 
+                  whiteSpace: 'pre-wrap', 
+                  fontFamily: 'Arial, sans-serif', 
+                  fontSize: '14px', 
+                  lineHeight: '1.5',
+                  margin: 0,
+                  color: '#333'
+                }}>
+                  {generateMessage(processed.out[0])}
+                </pre>
+              </div>
+              <p style={{ fontSize: '12px', color: '#666', marginTop: '10px', marginBottom: 0 }}>
+                Preview shows message for first candidate. Each message is personalized with candidate's name and role.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

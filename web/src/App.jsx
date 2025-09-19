@@ -148,6 +148,14 @@ function App() {
   const [columnMapping, setColumnMapping] = useState(() => {
     try { return JSON.parse(localStorage.getItem('hwc_colmap') || 'null') || {} } catch { return {} }
   })
+  // URL import state
+  const [importUrl, setImportUrl] = useState('')
+  // Batch open state
+  const [openIndex, setOpenIndex] = useState(0)
+  const [batchSize, setBatchSize] = useState(10)
+  // QR state
+  const [qrOpen, setQrOpen] = useState(false)
+  const [qrDataUrl, setQrDataUrl] = useState('')
 
   const mappingLookup = useMemo(() => {
     const map = {}
@@ -301,8 +309,6 @@ function App() {
   }
 
   // Batch open controls
-  const [openIndex, setOpenIndex] = useState(0)
-  const [batchSize, setBatchSize] = useState(10)
   function openNextBatch() {
     const slice = processed.out.slice(openIndex, openIndex + batchSize)
     slice.forEach(r => { if (r.WhatsApp_Link) window.open(r.WhatsApp_Link, '_blank') })
@@ -327,6 +333,67 @@ function App() {
     e.stopPropagation()
   }
 
+  // Import from URL (CSV or Google Sheets)
+  async function fetchCSVFromUrl() {
+    try {
+      if (!importUrl) return
+      let url = importUrl.trim()
+      const sheetsMatch = url.match(/docs.google.com\/spreadsheets\/d\/([^/]+)/)
+      if (sheetsMatch) {
+        const id = sheetsMatch[1]
+        url = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`
+      }
+      const res = await fetch(url)
+      const text = await res.text()
+      const parsed = Papa.parse(text, { header: true, skipEmptyLines: true })
+      if (parsed?.data?.length) handleParsedRows(parsed.data)
+    } catch (e) {
+      setErrors([`Import failed: ${e.message}`])
+    }
+  }
+  // Quick fix 10-digit phones
+  function fixTenDigitPhones() {
+    const cc = String(countryCode || '').replace(/\D+/g, '') || '91'
+    const transformed = rows.map(r => {
+      const digits = String(r['Phone'] || '').replace(/\D+/g, '')
+      if (digits.length === 10) return { ...r, Phone: `${cc}${digits}` }
+      return r
+    })
+    setRows(transformed)
+  }
+  // Project export/import
+  function exportProject() {
+    const payload = { settings: { countryCode, template, dedupeByPhone, autoDetectCountry }, columnMapping, rows }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    saveAs(blob, 'hr_whatsapp_project.json')
+  }
+  function importProject(file) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(String(e.target.result || '{}'))
+        if (json?.settings) {
+          setCountryCode(String(json.settings.countryCode || '91'))
+          setTemplate(String(json.settings.template || DEFAULT_TEMPLATE))
+          setDedupeByPhone(Boolean(json.settings.dedupeByPhone))
+          setAutoDetectCountry(Boolean(json.settings.autoDetectCountry))
+        }
+        if (json?.columnMapping) setColumnMapping(json.columnMapping)
+        if (Array.isArray(json?.rows)) setRows(json.rows)
+      } catch {
+        setErrors(['Invalid project file'])
+      }
+    }
+    reader.readAsText(file)
+  }
+  async function openQr(link) {
+    if (!link) return
+    const { toDataURL } = await import('qrcode')
+    const dataUrl = await toDataURL(link, { width: 256, margin: 1 })
+    setQrDataUrl(dataUrl)
+    setQrOpen(true)
+  }
+
   return (
     <div className="min-h-screen p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -345,18 +412,10 @@ function App() {
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-semibold text-lg">Import Candidates</h2>
                 <div className="flex gap-2">
-                  <button
-                    onClick={downloadTemplateCSV}
-                    className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
-                  >
-                    Download Template
-                  </button>
-                  <button
-                    onClick={() => { setRows([]); setMissingJDRows([]); setErrors([]) }}
-                    className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
-                  >
-                    Clear
-                  </button>
+                  <input value={importUrl} onChange={(e)=>setImportUrl(e.target.value)} placeholder="Paste CSV URL or Google Sheets link" className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 w-64" />
+                  <button onClick={fetchCSVFromUrl} className="px-3 py-2 text-xs sm:text-sm rounded-lg border">Import URL</button>
+                  <button onClick={downloadTemplateCSV} className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:bg-gray-50">Download Template</button>
+                  <button onClick={() => { setRows([]); setMissingJDRows([]); setErrors([]) }} className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:bg-gray-50">Clear</button>
                 </div>
               </div>
 
@@ -462,6 +521,7 @@ function App() {
                   >
                     Copy All Links
                   </button>
+                  <button className="px-3 py-2 text-xs sm:text-sm rounded-lg border" onClick={fixTenDigitPhones}>Fix 10-digit Phones</button>
                 </div>
               </div>
 
@@ -570,6 +630,13 @@ function App() {
                   />
                   <span>Auto-detect country code from phone</span>
                 </label>
+                <div className="flex items-center gap-2">
+                  <button className="px-3 py-2 rounded-lg border" onClick={exportProject}>Export Project</button>
+                  <label className="px-3 py-2 rounded-lg border cursor-pointer">
+                    Import Project
+                    <input type="file" accept="application/json" className="hidden" onChange={(e) => importProject(e.target.files?.[0])} />
+                  </label>
+                </div>
               </div>
             </div>
             <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur">
@@ -589,6 +656,13 @@ function App() {
             </div>
           </aside>
         </section>
+        {qrOpen && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4" onClick={() => setQrOpen(false)}>
+            <div className="bg-white rounded-xl p-4" onClick={(e) => e.stopPropagation()}>
+              <img src={qrDataUrl} alt="QR" />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -607,6 +681,7 @@ function ResultsTable({ data }) {
           <th className="px-3 py-2">Phone</th>
           <th className="px-3 py-2">JD Link</th>
           <th className="px-3 py-2">WhatsApp_Link</th>
+          <th className="px-3 py-2">QR</th>
         </tr>
       </thead>
       <tbody>
@@ -624,15 +699,14 @@ function ResultsTable({ data }) {
             </td>
             <td className="px-3 py-2">
               {r['WhatsApp_Link'] ? (
-                <a
-                  href={r['WhatsApp_Link']}
-                  target="_blank"
-                  className="inline-block px-3 py-2 rounded-lg bg-green-600 text-white"
-                >
-                  Send on WhatsApp
-                </a>
+                <a href={r['WhatsApp_Link']} target="_blank" className="inline-block px-3 py-2 rounded-lg bg-green-600 text-white">Send on WhatsApp</a>
               ) : (
                 <span className="text-gray-400">Invalid phone</span>
+              )}
+            </td>
+            <td className="px-3 py-2">
+              {r['WhatsApp_Link'] && (
+                <button onClick={() => openQr(r['WhatsApp_Link'])} className="px-2 py-1 rounded-lg border">QR</button>
               )}
             </td>
           </tr>

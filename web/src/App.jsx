@@ -135,6 +135,8 @@ function App() {
   const [dedupeByPhone, setDedupeByPhone] = useState(true)
   const [autoDetectCountry, setAutoDetectCountry] = useState(true)
   const [search, setSearch] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
+  const [toast, setToast] = useState(null)
 
   // Load from localStorage
   useEffect(() => {
@@ -269,6 +271,7 @@ function App() {
     const links = processed.out.map(r => r.WhatsApp_Link).filter(Boolean).join('\n')
     if (!links) return
     navigator.clipboard.writeText(links)
+    showToast(`Copied ${processed.out.filter(r => r.WhatsApp_Link).length} links`)  
   }
 
   function exportInvalidCSV() {
@@ -281,11 +284,49 @@ function App() {
     e.stopPropagation()
     const files = e.dataTransfer.files
     onFilesSelected(files)
+    setIsDragging(false)
   }
 
   function onDragOver(e) {
     e.preventDefault()
     e.stopPropagation()
+  }
+
+  function onDragEnter(e) {
+    e.preventDefault(); e.stopPropagation(); setIsDragging(true)
+  }
+
+  function onDragLeave(e) {
+    e.preventDefault(); e.stopPropagation(); setIsDragging(false)
+  }
+
+  function showToast(message) {
+    setToast(message)
+    window.clearTimeout(showToast.__t)
+    showToast.__t = window.setTimeout(() => setToast(null), 1800)
+  }
+
+  function loadSampleData() {
+    const sample = [
+      {
+        Name: 'Aarav Mehta',
+        Phone: '+91 9876543210',
+        'Current Role': 'Frontend Engineer',
+        'Key Skills': 'React, JS, UI',
+        'Profile Summary': '3+ yrs, product UI',
+        'JD Link': 'ikf.co.in/careers/frontend',
+      },
+      {
+        Name: 'Riya Sharma',
+        Phone: '9876501234',
+        'Current Role': 'UX Designer',
+        'Key Skills': 'Figma, UX',
+        'Profile Summary': '5+ yrs, SaaS',
+        'JD Link': 'https://www.ikf.co.in/careers/ux-designer',
+      },
+    ]
+    handleParsedRows(sample)
+    showToast('Loaded sample data')
   }
 
   return (
@@ -325,8 +366,10 @@ function App() {
                 ref={dropRef}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
+                onDragEnter={onDragEnter}
+                onDragLeave={onDragLeave}
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:bg-gray-50 transition"
+                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition ${isDragging ? 'bg-emerald-50 ring-2 ring-emerald-400' : 'hover:bg-gray-50'}`}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter') fileInputRef.current?.click() }}
@@ -352,6 +395,14 @@ function App() {
                     handlePaste(text)
                   }}
                 />
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={loadSampleData}
+                    className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
+                  >
+                    Load Sample Data
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -365,14 +416,14 @@ function App() {
 
             <div className="bg-white/90 rounded-2xl shadow-md overflow-hidden">
               <div className="flex flex-wrap items-center gap-2 border-b p-2 sm:p-3">
-                <div className="inline-flex rounded-lg bg-gray-100 text-gray-700 text-xs sm:text-sm px-3 py-1">
-                  Total: {processed.out.length}
+                <div className="inline-flex items-center gap-1 rounded-lg bg-gray-100 text-gray-700 text-xs sm:text-sm px-3 py-1">
+                  <span>📊</span> <span>Total: {processed.out.length}</span>
                 </div>
-                <div className="inline-flex rounded-lg bg-amber-100 text-amber-800 text-xs sm:text-sm px-3 py-1">
-                  Missing JD: {processed.missing.length}
+                <div className="inline-flex items-center gap-1 rounded-lg bg-amber-100 text-amber-800 text-xs sm:text-sm px-3 py-1">
+                  <span>⚠️</span> <span>Missing JD: {processed.missing.length}</span>
                 </div>
-                <div className="inline-flex rounded-lg bg-rose-100 text-rose-800 text-xs sm:text-sm px-3 py-1">
-                  Invalid Phone: {processed.invalid.length}
+                <div className="inline-flex items-center gap-1 rounded-lg bg-rose-100 text-rose-800 text-xs sm:text-sm px-3 py-1">
+                  <span>🚫</span> <span>Invalid Phone: {processed.invalid.length}</span>
                 </div>
 
                 <div className="ml-auto flex gap-2">
@@ -501,8 +552,16 @@ function App() {
             </div>
           </aside>
         </section>
+        <footer className="text-xs text-gray-500 text-center py-4">
+          Built for HR outreach. Data stays in your browser.
+        </footer>
       </div>
     </div>
+    {toast && (
+      <div className="fixed bottom-4 right-4 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg/50 animate-fade">
+        {toast}
+      </div>
+    )}
   )
 }
 
@@ -514,7 +573,7 @@ function ResultsTable({ data }) {
     </div>
   )
   return (
-    <div className="overflow-hidden rounded-xl border">
+    <div className="overflow-auto rounded-xl border max-h-[60vh]">
       <table className="min-w-full text-sm">
         <thead className="bg-gray-50 sticky top-0 z-10">
           <tr className="text-left text-gray-600">
@@ -560,3 +619,4 @@ function ResultsTable({ data }) {
 }
 
 export default App
+

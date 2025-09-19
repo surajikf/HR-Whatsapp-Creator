@@ -175,8 +175,8 @@ function App() {
         Upload CSV/Excel or paste data to generate personalized messages and links.
       </p>
 
-      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-        <div style={{ flex: '2', minWidth: '300px' }}>
+      <div style={{ width: '100%' }}>
+        <div style={{ width: '100%' }}>
           <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px', borderRadius: '8px' }}>
             <h2>Import Candidates</h2>
             <div style={{ marginBottom: '10px' }}>
@@ -273,24 +273,6 @@ function App() {
                 </div>
               </div>
             </div>
-
-        <div style={{ flex: '1', minWidth: '250px' }}>
-          <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px', borderRadius: '8px' }}>
-            <h3>Instructions</h3>
-            <ul style={{ fontSize: '14px', lineHeight: '1.5' }}>
-              <li>Headers required: <code>Name, Phone, Current Role, Key Skills, Profile Summary, JD Link</code></li>
-              <li>We clean phone numbers to last 10 digits and prefix with 91.</li>
-              <li>WhatsApp links open in a new tab.</li>
-            </ul>
-          </div>
-
-          <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '8px' }}>
-            <h3>About</h3>
-            <p style={{ fontSize: '14px' }}>
-              Messages are personalized per candidate and encoded for WhatsApp.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   )

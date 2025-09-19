@@ -140,8 +140,8 @@ function App() {
   const [globalCount, setGlobalCount] = useState(null)
 
   // Global counter config (CountAPI)
-  const COUNTER_NS = 'surajikf-hr-whatsapp-creator'
-  const COUNTER_KEY = 'messages'
+  const COUNTER_NS = 'surajikf'
+  const COUNTER_KEY = 'hr-whatsapp-messages'
 
   // Load from localStorage
   useEffect(() => {
@@ -164,7 +164,10 @@ function App() {
   useEffect(() => {
     async function initCounter() {
       try {
-        const getRes = await fetch(`https://api.countapi.xyz/get/${COUNTER_NS}/${COUNTER_KEY}`)
+        const getRes = await fetch(`https://api.countapi.xyz/get/${COUNTER_NS}/${COUNTER_KEY}`, { 
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        })
         if (getRes.ok) {
           const j = await getRes.json()
           setGlobalCount(Number(j?.value || 0))
@@ -172,12 +175,17 @@ function App() {
         }
       } catch {}
       try {
-        const createRes = await fetch(`https://api.countapi.xyz/create?namespace=${COUNTER_NS}&key=${COUNTER_KEY}&value=0`)
+        const createRes = await fetch(`https://api.countapi.xyz/create?namespace=${COUNTER_NS}&key=${COUNTER_KEY}&value=0`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        })
         if (createRes.ok) {
           const j = await createRes.json()
           setGlobalCount(Number(j?.value || 0))
         }
       } catch {}
+      // Fallback: set to 0 if API fails
+      setGlobalCount(0)
     }
     initCounter()
   }, [])
@@ -185,7 +193,11 @@ function App() {
   async function incrementGlobalCount(amount) {
     const amt = Math.max(1, Math.floor(Number(amount) || 1))
     try {
-      const res = await fetch(`https://api.countapi.xyz/update/${COUNTER_NS}/${COUNTER_KEY}?amount=${amt}`, { keepalive: true })
+      const res = await fetch(`https://api.countapi.xyz/update/${COUNTER_NS}/${COUNTER_KEY}?amount=${amt}`, { 
+        method: 'GET',
+        keepalive: true,
+        headers: { 'Accept': 'application/json' }
+      })
       if (res.ok) {
         const j = await res.json()
         if (typeof j?.value === 'number') setGlobalCount(j.value)

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { parsePhoneNumberFromString } from 'libphonenumber-js'
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
@@ -41,15 +42,15 @@ const HEADER_ALIASES = {
   link: 'JD Link',
 }
 
-function normalizeHeaderKey(key) {
+function normalizeHeaderKey(key, mappingLookup) {
   const compact = String(key).toLowerCase().replace(/[^a-z0-9]/g, '')
-  return HEADER_ALIASES[compact] || key
+  return mappingLookup[compact] || HEADER_ALIASES[compact] || key
 }
 
-function normalizeRowHeaders(row) {
+function normalizeRowHeaders(row, mappingLookup) {
   const normalized = {}
   for (const [rawKey, value] of Object.entries(row)) {
-    const targetKey = normalizeHeaderKey(rawKey)
+    const targetKey = normalizeHeaderKey(rawKey, mappingLookup)
     normalized[targetKey] = value
   }
   return normalized
@@ -57,7 +58,15 @@ function normalizeRowHeaders(row) {
 
 function cleanPhone(raw, countryCode, autoDetectCountry) {
   if (!raw) return ''
-  const digits = String(raw).replace(/\D+/g, '')
+  const rawStr = String(raw)
+  // Try libphonenumber first
+  try {
+    let phone = parsePhoneNumberFromString(rawStr, (countryCode || 'IN'))
+    if (!phone && autoDetectCountry) phone = parsePhoneNumberFromString(rawStr)
+    if (phone && phone.isValid()) return phone.number.replace(/\+/g, '')
+  } catch {}
+  // Fallback: last 10 digits + country code
+  const digits = rawStr.replace(/\D+/g, '')
   const last10 = digits.slice(-10)
   if (!last10) return ''
   if (autoDetectCountry && digits.length > 10) {
@@ -105,8 +114,8 @@ function encodeForWhatsApp(text) {
   return encodeURIComponent(text).replace(/%5Cn/g, '%0A').replace(/%20/g, '%20')
 }
 
-function ensureColumns(row) {
-  const normalized = normalizeRowHeaders({ ...row })
+function ensureColumns(row, mappingLookup) {
+  const normalized = normalizeRowHeaders({ ...row }, mappingLookup)
   for (const key of REQUIRED_COLUMNS) {
     if (!(key in normalized)) normalized[key] = ''
   }
@@ -135,6 +144,20 @@ function App() {
   const [dedupeByPhone, setDedupeByPhone] = useState(true)
   const [autoDetectCountry, setAutoDetectCountry] = useState(true)
   const [search, setSearch] = useState('')
+  const [detectedHeaders, setDetectedHeaders] = useState([])
+  const [columnMapping, setColumnMapping] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('hwc_colmap') || 'null') || {} } catch { return {} }
+  })
+
+  const mappingLookup = useMemo(() => {
+    const map = {}
+    for (const [canonical, original] of Object.entries(columnMapping || {})) {
+      if (!original) continue
+      const compact = String(original).toLowerCase().replace(/[^a-z0-9]/g, '')
+      map[compact] = canonical
+    }
+    return map
+  }, [columnMapping])
 
   // Load from localStorage
   useEffect(() => {
@@ -153,6 +176,10 @@ function App() {
     try { localStorage.setItem('hwc_settings', JSON.stringify(payload)) } catch {}
   }, [countryCode, template, dedupeByPhone, autoDetectCountry])
 
+  useEffect(() => {
+    try { localStorage.setItem('hwc_colmap', JSON.stringify(columnMapping || {})) } catch {}
+  }, [columnMapping])
+
   const processed = useMemo(() => {
     const out = []
     const missing = []
@@ -160,7 +187,7 @@ function App() {
     const seenPhones = new Set()
 
     for (const r of rows) {
-      const normalized = ensureColumns(r)
+      const normalized = ensureColumns(r, mappingLookup)
       const phone = cleanPhone(normalized['Phone'], countryCode, autoDetectCountry)
       const jdNorm = normalizeUrlMaybe(normalized['JD Link'])
       const display = {
@@ -194,7 +221,7 @@ function App() {
     )
 
     return { out: filterByQuery(out), missing: filterByQuery(missing), invalid: filterByQuery(invalid) }
-  }, [rows, countryCode, template, dedupeByPhone, autoDetectCountry, search])
+  }, [rows, countryCode, template, dedupeByPhone, autoDetectCountry, search, mappingLookup])
 
   function onFilesSelected(fileList) {
     const file = fileList?.[0]
@@ -225,7 +252,9 @@ function App() {
   }
 
   function handleParsedRows(list) {
-    const normalized = list.map(ensureColumns)
+    const headers = Object.keys(list?.[0] || {})
+    setDetectedHeaders(headers)
+    const normalized = list.map(r => ensureColumns(r, mappingLookup))
     const missingCols = REQUIRED_COLUMNS.filter(c => !(c in normalized[0] || {}))
     if (missingCols.length) {
       setErrors([`Missing required columns: ${missingCols.join(', ')}`])
@@ -270,6 +299,16 @@ function App() {
     if (!links) return
     navigator.clipboard.writeText(links)
   }
+
+  // Batch open controls
+  const [openIndex, setOpenIndex] = useState(0)
+  const [batchSize, setBatchSize] = useState(10)
+  function openNextBatch() {
+    const slice = processed.out.slice(openIndex, openIndex + batchSize)
+    slice.forEach(r => { if (r.WhatsApp_Link) window.open(r.WhatsApp_Link, '_blank') })
+    setOpenIndex(i => Math.min(i + slice.length, processed.out.length))
+  }
+  function resetBatch() { setOpenIndex(0) }
 
   function exportInvalidCSV() {
     if (!processed.invalid.length) return
@@ -382,6 +421,19 @@ function App() {
                     placeholder="Search name or role"
                     className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200"
                   />
+                  <div className="hidden sm:flex items-center gap-2 text-xs text-gray-600">
+                    <span>Opened {openIndex}/{processed.out.length}</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={batchSize}
+                      onChange={e => setBatchSize(Math.max(1, Number(e.target.value) || 1))}
+                      className="w-16 px-2 py-1 border rounded-lg"
+                      title="Batch size"
+                    />
+                    <button onClick={openNextBatch} disabled={!processed.out.length || openIndex>=processed.out.length} className="px-2 py-1 rounded-lg border">Open N</button>
+                    <button onClick={resetBatch} className="px-2 py-1 rounded-lg border">Reset</button>
+                  </div>
                   <button
                     className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
                     disabled={!processed.out.length}
@@ -445,6 +497,42 @@ function App() {
           </div>
 
           <aside className="space-y-6">
+            <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur">
+              <h3 className="font-semibold mb-2">Column Mapping</h3>
+              <div className="text-xs text-gray-600 mb-3">Map your source headers to required fields.</div>
+              <div className="grid grid-cols-1 gap-3 text-sm">
+                {REQUIRED_COLUMNS.map((c) => (
+                  <div key={c} className="flex items-center gap-2">
+                    <div className="w-40 text-gray-600">{c}</div>
+                    <select
+                      value={columnMapping?.[c] || ''}
+                      onChange={(e) => setColumnMapping(prev => ({ ...prev, [c]: e.target.value }))}
+                      className="flex-1 border rounded-lg p-2"
+                    >
+                      <option value="">Auto</option>
+                      {detectedHeaders.map(h => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex gap-2">
+                <button
+                  className="px-3 py-2 rounded-lg border"
+                  onClick={() => {
+                    // Auto map using aliases
+                    const next = { ...columnMapping }
+                    for (const h of detectedHeaders) {
+                      const canonical = HEADER_ALIASES[String(h).toLowerCase().replace(/[^a-z0-9]/g, '')]
+                      if (canonical && !next[canonical]) next[canonical] = h
+                    }
+                    setColumnMapping(next)
+                  }}
+                >Auto-map</button>
+                <button className="px-3 py-2 rounded-lg border" onClick={() => setColumnMapping({})}>Clear</button>
+              </div>
+            </div>
             <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur">
               <h3 className="font-semibold mb-2">Settings</h3>
               <div className="space-y-3 text-sm">

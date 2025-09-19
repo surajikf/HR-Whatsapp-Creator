@@ -447,7 +447,6 @@ function App() {
                   </div>
                 </div>
               </div>
-              </div>
             </div>
 
             {errors.length > 0 && (

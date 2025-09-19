@@ -348,48 +348,50 @@ function App() {
           <div className="relative">
             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight gradient-text-emerald animate-bounce-in">
               📱 WhatsApp Link Generator
-          </h1>
+            </h1>
             <div className="absolute -top-2 -right-2 text-2xl floating">✨</div>
             <div className="absolute -bottom-1 -left-2 text-xl floating-delayed">🚀</div>
           </div>
           <p className="text-lg text-gray-600 mt-4 font-medium">
             Upload CSV/Excel or paste data to generate personalized messages and links.
           </p>
-          <div className="mt-4 flex justify-center space-x-4 text-sm text-gray-500">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-              Smart Processing
+          <div className="mt-6 flex flex-wrap justify-center gap-6 text-sm">
+            <span className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-sm border border-white/30 shadow-sm">
+              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+              <span className="text-gray-600 font-medium">Smart Processing</span>
             </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-              Auto Detection
+            <span className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-sm border border-white/30 shadow-sm">
+              <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+              <span className="text-gray-600 font-medium">Auto Detection</span>
             </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
-              Instant Export
+            <span className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-sm border border-white/30 shadow-sm">
+              <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
+              <span className="text-gray-600 font-medium">Instant Export</span>
             </span>
           </div>
         </header>
 
         <section className="grid lg:grid-cols-3 gap-6 animate-slide-up">
           <div className="lg:col-span-2 space-y-6">
-            <div className="glass rounded-3xl shadow-xl p-6 card-hover">
-              <div className="flex items-center justify-between mb-4">
+            <div className="glass-soft rounded-3xl shadow-xl p-6 card-hover">
+              <div className="flex items-center justify-between mb-6">
                 <h2 className="font-bold text-xl gradient-text-emerald flex items-center gap-2">
                   📊 Import Candidates
                 </h2>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <button
                     onClick={downloadTemplateCSV}
-                    className="btn-secondary text-xs sm:text-sm px-4 py-2"
+                    className="btn-secondary text-sm px-4 py-2 flex items-center gap-2"
                   >
-                    📥 Download Template
+                    <span>📥</span>
+                    <span>Download Template</span>
                   </button>
                   <button
                     onClick={() => { setRows([]); setMissingJDRows([]); setErrors([]) }}
-                    className="px-4 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors duration-200 hover:scale-105"
+                    className="btn-soft text-sm px-4 py-2 flex items-center gap-2"
                   >
-                    🗑️ Clear
+                    <span>🗑️</span>
+                    <span>Clear</span>
                   </button>
                 </div>
               </div>
@@ -401,20 +403,20 @@ function App() {
                 onDragEnter={onDragEnter}
                 onDragLeave={onDragLeave}
                 onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 ${isDragging ? 'bg-gradient-to-br from-emerald-50 to-blue-50 ring-4 ring-emerald-400 scale-105 animate-glow' : 'hover:bg-gradient-to-br hover:from-gray-50 hover:to-blue-50 hover:scale-102'}`}
+                className={`border-2 border-dashed rounded-3xl p-10 text-center cursor-pointer transition-all duration-300 ${isDragging ? 'bg-gradient-to-br from-emerald-50/80 to-blue-50/80 ring-4 ring-emerald-300 scale-105 animate-glow backdrop-blur-sm' : 'hover:bg-gradient-to-br hover:from-gray-50/60 hover:to-blue-50/60 hover:scale-102 backdrop-blur-sm'}`}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter') fileInputRef.current?.click() }}
               >
-                <div className="text-6xl mb-4">📁</div>
-                <div className="text-gray-700 font-semibold text-lg mb-2">
+                <div className="text-7xl mb-6 floating">📁</div>
+                <div className="text-gray-700 font-semibold text-xl mb-3">
                   {isLoading ? '⏳ Processing file...' : '🎯 Drag & drop file here, or click to browse'}
                 </div>
-                <div className="text-sm text-gray-500 mb-4">Accepted: .csv, .xlsx</div>
+                <div className="text-sm text-gray-500 mb-6 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm inline-block">Accepted: .csv, .xlsx</div>
                 {isLoading && (
-                  <div className="mt-4">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-                    <div className="mt-2 text-sm text-emerald-600 font-medium">Processing...</div>
+                  <div className="mt-6">
+                    <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
+                    <div className="mt-3 text-sm text-emerald-600 font-medium">Processing your file...</div>
                   </div>
                 )}
                 <input
@@ -426,24 +428,25 @@ function App() {
                 />
               </div>
 
-              <div className="mt-6">
-                <label className="block font-semibold mb-3 text-gray-700 flex items-center gap-2">
+              <div className="mt-8">
+                <label className="block font-semibold mb-4 text-gray-700 flex items-center gap-2">
                   📋 Paste Tabular Data
                 </label>
                 <textarea
-                  className="w-full h-44 border-2 border-gray-200 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 resize-none"
+                  className="w-full h-48 border-2 border-gray-200 rounded-2xl p-4 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition-all duration-200 resize-none bg-white/80 backdrop-blur-sm"
                   placeholder="Paste CSV/TSV with header: Name, Phone, Current Role, Key Skills, Profile Summary, JD Link"
                   onPaste={(e) => {
                     const text = e.clipboardData.getData('text')
                     handlePaste(text)
                   }}
                 />
-                <div className="mt-4 flex gap-3">
+                <div className="mt-6 flex gap-3">
                   <button
                     onClick={loadSampleData}
-                    className="btn-accent text-sm px-4 py-2"
+                    className="btn-accent text-sm px-6 py-3 flex items-center gap-2"
                   >
-                    🎲 Load Sample Data
+                    <span>🎲</span>
+                    <span>Load Sample Data</span>
                   </button>
                 </div>
               </div>
@@ -462,57 +465,73 @@ function App() {
             )}
 
             <div className="glass rounded-3xl shadow-xl overflow-hidden card-hover">
-              <div className="flex flex-wrap items-center gap-3 border-b border-gray-200/50 p-4 bg-gradient-to-r from-gray-50/50 to-blue-50/50">
-                <div className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800 text-sm px-4 py-2 font-semibold shadow-sm">
-                  <span className="text-lg">📊</span> <span>Total: {processed.out.length}</span>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 text-sm px-4 py-2 font-semibold shadow-sm">
-                  <span className="text-lg">⚠️</span> <span>Missing JD: {processed.missing.length}</span>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-100 to-rose-200 text-rose-800 text-sm px-4 py-2 font-semibold shadow-sm">
-                  <span className="text-lg">🚫</span> <span>Invalid Phone: {processed.invalid.length}</span>
+              <div className="border-b border-gray-200/50 p-6 bg-gradient-to-r from-gray-50/50 to-blue-50/50">
+                {/* Stats Row */}
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <div className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800 text-sm px-4 py-3 font-semibold shadow-sm hover:shadow-md transition-all duration-200">
+                    <span className="text-lg">📊</span> 
+                    <span>Total: {processed.out.length}</span>
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 text-sm px-4 py-3 font-semibold shadow-sm hover:shadow-md transition-all duration-200">
+                    <span className="text-lg">⚠️</span> 
+                    <span>Missing JD: {processed.missing.length}</span>
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-rose-100 to-rose-200 text-rose-800 text-sm px-4 py-3 font-semibold shadow-sm hover:shadow-md transition-all duration-200">
+                    <span className="text-lg">🚫</span> 
+                    <span>Invalid Phone: {processed.invalid.length}</span>
+                  </div>
                 </div>
 
-                <div className="ml-auto flex gap-3">
-                  <div className="relative">
+                {/* Search and Actions Row */}
+                <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+                  {/* Search Input */}
+                  <div className="relative flex-shrink-0">
                     <input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="🔍 Search name or role"
-                      className="pl-10 pr-4 py-2 text-sm rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 w-48"
+                      placeholder="🔍 Search name or role..."
+                      className="pl-12 pr-4 py-3 text-sm rounded-2xl border-2 border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 w-full lg:w-64 bg-white/80 backdrop-blur-sm"
                     />
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">
                       🔍
                     </div>
-                  </div>
+                </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap gap-3 justify-end w-full lg:w-auto">
                   <button
-                    className="btn-primary text-sm px-4 py-2 disabled:opacity-50"
+                      className="btn-primary text-sm px-5 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[120px] justify-center"
                     disabled={!processed.out.length}
                     onClick={() => exportCSV(processed.out, 'whatsapp_links.csv')}
                   >
-                    📥 Download CSV
+                      <span>📥</span>
+                      <span>Download CSV</span>
                   </button>
                   <button
-                    className="btn-secondary text-sm px-4 py-2 disabled:opacity-50"
+                      className="btn-secondary text-sm px-5 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[120px] justify-center"
                     disabled={!processed.missing.length}
                     onClick={() => exportCSV(processed.missing, 'missing_jd_links.csv')}
                   >
-                    ⚠️ Missing JD
+                      <span>⚠️</span>
+                      <span>Missing JD</span>
+                    </button>
+                    <button
+                      className="px-5 py-3 text-sm rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 min-w-[120px] justify-center"
+                      disabled={!processed.invalid.length}
+                      onClick={exportInvalidCSV}
+                    >
+                      <span>🚫</span>
+                      <span>Invalid</span>
+                    </button>
+                    <button
+                      className="btn-accent text-sm px-5 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[120px] justify-center"
+                      disabled={!processed.out.length}
+                      onClick={copyAllLinks}
+                    >
+                      <span>📋</span>
+                      <span>Copy All</span>
                   </button>
-                  <button
-                    className="px-4 py-2 text-sm rounded-lg bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white disabled:opacity-50 transition-all duration-200 hover:scale-105 shadow-lg"
-                    disabled={!processed.invalid.length}
-                    onClick={exportInvalidCSV}
-                  >
-                    🚫 Invalid
-                  </button>
-                  <button
-                    className="btn-accent text-sm px-4 py-2 disabled:opacity-50"
-                    disabled={!processed.out.length}
-                    onClick={copyAllLinks}
-                  >
-                    📋 Copy All
-                  </button>
+                  </div>
                 </div>
               </div>
 
@@ -557,83 +576,83 @@ function App() {
           </div>
 
           <aside className="space-y-6 animate-slide-in-right">
-            <div className="glass rounded-3xl shadow-xl p-6 card-hover">
-              <h3 className="font-bold text-xl gradient-text-emerald mb-4 flex items-center gap-2">
+            <div className="glass-soft rounded-3xl shadow-xl p-6 card-hover">
+              <h3 className="font-bold text-xl gradient-text-emerald mb-6 flex items-center gap-2">
                 ⚙️ Settings
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                  <label className="block text-gray-700 font-semibold mb-3 flex items-center gap-2">
                     🌍 Country Code
                   </label>
                   <input
                     value={countryCode}
                     onChange={(e) => setCountryCode(e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-center font-mono text-lg"
+                    className="w-full border-2 border-gray-200 rounded-2xl p-4 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition-all duration-200 text-center font-mono text-lg bg-white/80 backdrop-blur-sm"
                     placeholder="e.g. 91"
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                  <label className="block text-gray-700 font-semibold mb-3 flex items-center gap-2">
                     📝 Message Template
                   </label>
-                  <div className="text-xs text-gray-500 mb-2 bg-gray-100 p-2 rounded-lg">
-                    Use placeholders: <span className="font-mono bg-white px-1 rounded">{`{NAME}`}</span>, <span className="font-mono bg-white px-1 rounded">{`{ROLE}`}</span>, <span className="font-mono bg-white px-1 rounded">{`{JD_LINK}`}</span>
+                  <div className="text-xs text-gray-500 mb-3 bg-white/60 backdrop-blur-sm p-3 rounded-xl border border-white/30">
+                    Use placeholders: <span className="font-mono bg-white px-2 py-1 rounded-lg text-emerald-600">{`{NAME}`}</span>, <span className="font-mono bg-white px-2 py-1 rounded-lg text-emerald-600">{`{ROLE}`}</span>, <span className="font-mono bg-white px-2 py-1 rounded-lg text-emerald-600">{`{JD_LINK}`}</span>
                   </div>
                   <textarea
                     value={template}
                     onChange={(e) => setTemplate(e.target.value)}
-                    className="w-full h-40 border-2 border-gray-200 rounded-xl p-3 font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 resize-none"
+                    className="w-full h-44 border-2 border-gray-200 rounded-2xl p-4 font-mono focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition-all duration-200 resize-none bg-white/80 backdrop-blur-sm"
                   />
                 </div>
-                <div className="space-y-3">
-                  <label className="inline-flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200">
+                <div className="space-y-4">
+                  <label className="inline-flex items-center gap-3 p-4 rounded-2xl hover:bg-white/40 transition-colors duration-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={dedupeByPhone}
                       onChange={(e) => setDedupeByPhone(e.target.checked)}
-                      className="w-5 h-5 rounded focus:ring-2 focus:ring-emerald-500 text-emerald-600"
+                      className="w-5 h-5 rounded focus:ring-2 focus:ring-emerald-400 text-emerald-500"
                     />
-                    <span className="font-medium">🔄 Remove duplicates by phone</span>
+                    <span className="font-medium text-gray-700">🔄 Remove duplicates by phone</span>
                   </label>
-                  <label className="inline-flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200">
+                  <label className="inline-flex items-center gap-3 p-4 rounded-2xl hover:bg-white/40 transition-colors duration-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={autoDetectCountry}
                       onChange={(e) => setAutoDetectCountry(e.target.checked)}
-                      className="w-5 h-5 rounded focus:ring-2 focus:ring-emerald-500 text-emerald-600"
+                      className="w-5 h-5 rounded focus:ring-2 focus:ring-emerald-400 text-emerald-500"
                     />
-                    <span className="font-medium">🔍 Auto-detect country code from phone</span>
+                    <span className="font-medium text-gray-700">🔍 Auto-detect country code from phone</span>
                   </label>
                 </div>
               </div>
             </div>
-            <div className="glass rounded-3xl shadow-xl p-6 card-hover">
-              <h3 className="font-bold text-xl gradient-text-emerald mb-4 flex items-center gap-2">
+            <div className="glass-soft rounded-3xl shadow-xl p-6 card-hover">
+              <h3 className="font-bold text-xl gradient-text-emerald mb-6 flex items-center gap-2">
                 📚 Instructions
               </h3>
-              <ul className="space-y-3 text-sm text-gray-600">
-                <li className="flex items-start gap-3">
-                  <span className="text-emerald-500 mt-1">•</span>
-                  <span>Headers required: <span className="font-mono bg-gray-100 px-2 py-1 rounded">Name, Phone, Current Role, Key Skills, Profile Summary, JD Link</span></span>
+              <ul className="space-y-4 text-sm text-gray-600">
+                <li className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/30 transition-colors duration-200">
+                  <span className="text-emerald-500 mt-1 text-lg">•</span>
+                  <span>Headers required: <span className="font-mono bg-white/60 px-2 py-1 rounded-lg text-emerald-600">Name, Phone, Current Role, Key Skills, Profile Summary, JD Link</span></span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-emerald-500 mt-1">•</span>
+                <li className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/30 transition-colors duration-200">
+                  <span className="text-emerald-500 mt-1 text-lg">•</span>
                   <span>We clean phone numbers to last 10 digits and prefix with country code</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-emerald-500 mt-1">•</span>
+                <li className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/30 transition-colors duration-200">
+                  <span className="text-emerald-500 mt-1 text-lg">•</span>
                   <span>WhatsApp links open in a new tab automatically</span>
                 </li>
               </ul>
             </div>
 
-            <div className="glass rounded-3xl shadow-xl p-6 card-hover">
-              <h3 className="font-bold text-xl gradient-text-emerald mb-4 flex items-center gap-2">
+            <div className="glass-soft rounded-3xl shadow-xl p-6 card-hover">
+              <h3 className="font-bold text-xl gradient-text-emerald mb-6 flex items-center gap-2">
                 ℹ️ About
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Messages are personalized per candidate and encoded for WhatsApp.
+              <p className="text-sm text-gray-600 leading-relaxed p-4 rounded-xl bg-white/30 backdrop-blur-sm">
+                Messages are personalized per candidate and encoded for WhatsApp. 
                 All data processing happens in your browser for privacy.
               </p>
             </div>

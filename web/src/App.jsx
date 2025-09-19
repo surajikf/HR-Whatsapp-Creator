@@ -348,7 +348,7 @@ function App() {
           <div className="relative">
             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight gradient-text-emerald animate-bounce-in">
               📱 WhatsApp Link Generator
-            </h1>
+          </h1>
             <div className="absolute -top-2 -right-2 text-2xl floating">✨</div>
             <div className="absolute -bottom-1 -left-2 text-xl floating-delayed">🚀</div>
           </div>
@@ -483,14 +483,14 @@ function App() {
                 </div>
 
                 {/* Search and Actions Row */}
-                <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+                <div className="flex items-center gap-4 justify-between overflow-x-auto">
                   {/* Search Input */}
                   <div className="relative flex-shrink-0">
                     <input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       placeholder="🔍 Search name or role..."
-                      className="pl-12 pr-4 py-3 text-sm rounded-2xl border-2 border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 w-full lg:w-64 bg-white/80 backdrop-blur-sm"
+                      className="pl-12 pr-4 py-3 text-sm rounded-2xl border-2 border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 w-64 bg-white/80 backdrop-blur-sm"
                     />
                     <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">
                       🔍
@@ -498,9 +498,9 @@ function App() {
                 </div>
 
                   {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-3 justify-end w-full lg:w-auto">
+                  <div className="flex items-center gap-3 flex-shrink-0">
                   <button
-                      className="btn-primary text-sm px-5 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[120px] justify-center"
+                      className="btn-primary text-sm px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
                     disabled={!processed.out.length}
                     onClick={() => exportCSV(processed.out, 'whatsapp_links.csv')}
                   >
@@ -508,7 +508,7 @@ function App() {
                       <span>Download CSV</span>
                   </button>
                   <button
-                      className="btn-secondary text-sm px-5 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[120px] justify-center"
+                      className="btn-secondary text-sm px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
                     disabled={!processed.missing.length}
                     onClick={() => exportCSV(processed.missing, 'missing_jd_links.csv')}
                   >
@@ -516,7 +516,7 @@ function App() {
                       <span>Missing JD</span>
                     </button>
                     <button
-                      className="px-5 py-3 text-sm rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 min-w-[120px] justify-center"
+                      className="px-4 py-3 text-sm rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 whitespace-nowrap"
                       disabled={!processed.invalid.length}
                       onClick={exportInvalidCSV}
                     >
@@ -524,7 +524,7 @@ function App() {
                       <span>Invalid</span>
                     </button>
                     <button
-                      className="btn-accent text-sm px-5 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[120px] justify-center"
+                      className="btn-accent text-sm px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
                       disabled={!processed.out.length}
                       onClick={copyAllLinks}
                     >
@@ -652,7 +652,7 @@ function App() {
                 ℹ️ About
               </h3>
               <p className="text-sm text-gray-600 leading-relaxed p-4 rounded-xl bg-white/30 backdrop-blur-sm">
-                Messages are personalized per candidate and encoded for WhatsApp. 
+                Messages are personalized per candidate and encoded for WhatsApp.
                 All data processing happens in your browser for privacy.
               </p>
             </div>

@@ -137,6 +137,11 @@ function App() {
   const [search, setSearch] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [toast, setToast] = useState(null)
+  const [globalCount, setGlobalCount] = useState(null)
+
+  // Global counter config (CountAPI)
+  const COUNTER_NS = 'surajikf-hr-whatsapp-creator'
+  const COUNTER_KEY = 'messages'
 
   // Load from localStorage
   useEffect(() => {
@@ -154,6 +159,39 @@ function App() {
     const payload = { countryCode, template, dedupeByPhone, autoDetectCountry }
     try { localStorage.setItem('hwc_settings', JSON.stringify(payload)) } catch {}
   }, [countryCode, template, dedupeByPhone, autoDetectCountry])
+
+  // Initialize global counter
+  useEffect(() => {
+    async function initCounter() {
+      try {
+        const getRes = await fetch(`https://api.countapi.xyz/get/${COUNTER_NS}/${COUNTER_KEY}`)
+        if (getRes.ok) {
+          const j = await getRes.json()
+          setGlobalCount(Number(j?.value || 0))
+          return
+        }
+      } catch {}
+      try {
+        const createRes = await fetch(`https://api.countapi.xyz/create?namespace=${COUNTER_NS}&key=${COUNTER_KEY}&value=0`)
+        if (createRes.ok) {
+          const j = await createRes.json()
+          setGlobalCount(Number(j?.value || 0))
+        }
+      } catch {}
+    }
+    initCounter()
+  }, [])
+
+  async function incrementGlobalCount(amount) {
+    const amt = Math.max(1, Math.floor(Number(amount) || 1))
+    try {
+      const res = await fetch(`https://api.countapi.xyz/update/${COUNTER_NS}/${COUNTER_KEY}?amount=${amt}`, { keepalive: true })
+      if (res.ok) {
+        const j = await res.json()
+        if (typeof j?.value === 'number') setGlobalCount(j.value)
+      }
+    } catch {}
+  }
 
   const processed = useMemo(() => {
     const out = []
@@ -272,6 +310,7 @@ function App() {
     if (!links) return
     navigator.clipboard.writeText(links)
     showToast(`Copied ${processed.out.filter(r => r.WhatsApp_Link).length} links`)  
+    incrementGlobalCount(processed.out.filter(r => r.WhatsApp_Link).length)
   }
 
   function exportInvalidCSV() {
@@ -416,6 +455,12 @@ function App() {
 
             <div className="bg-white/90 rounded-2xl shadow-md overflow-hidden">
               <div className="flex flex-wrap items-center gap-2 border-b p-2 sm:p-3">
+                <div className="inline-flex items-center gap-1 rounded-lg bg-purple-100 text-purple-800 text-xs sm:text-sm px-3 py-1">
+                  <span>🌍</span>
+                  <span>
+                    {globalCount === null ? 'Loading…' : `Total messages generated: ${globalCount.toLocaleString()}`}
+                  </span>
+                </div>
                 <div className="inline-flex items-center gap-1 rounded-lg bg-gray-100 text-gray-700 text-xs sm:text-sm px-3 py-1">
                   <span>📊</span> <span>Total: {processed.out.length}</span>
                 </div>
@@ -436,7 +481,7 @@ function App() {
                   <button
                     className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
                     disabled={!processed.out.length}
-                    onClick={() => exportCSV(processed.out, 'whatsapp_links.csv')}
+                    onClick={() => { exportCSV(processed.out, 'whatsapp_links.csv'); incrementGlobalCount(processed.out.filter(r => r.WhatsApp_Link).length) }}
                   >
                     Download CSV
                   </button>
@@ -603,6 +648,7 @@ function ResultsTable({ data }) {
                     href={r['WhatsApp_Link']}
                     target="_blank"
                     className="inline-block px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => incrementGlobalCount(1)}
                   >
                     Send on WhatsApp
                   </a>

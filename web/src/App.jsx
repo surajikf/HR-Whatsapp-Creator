@@ -342,8 +342,8 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen p-4 sm:p-6 bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+      <div className="max-w-7xl mx-auto space-y-8">
         <header className="text-center animate-fade-in">
           <div className="relative">
             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight gradient-text-emerald animate-bounce-in">
@@ -371,24 +371,24 @@ function App() {
           </div>
         </header>
 
-        <section className="grid lg:grid-cols-3 gap-6 animate-slide-up">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="glass-soft rounded-3xl shadow-xl p-6 card-hover">
-              <div className="flex items-center justify-between mb-6">
+        <section className="grid lg:grid-cols-3 gap-8 animate-slide-up">
+          <div className="lg:col-span-2 space-y-8">
+            <div className="glass-soft rounded-3xl shadow-xl p-8 card-hover">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <h2 className="font-bold text-xl gradient-text-emerald flex items-center gap-2">
                   📊 Import Candidates
                 </h2>
-                <div className="flex gap-3">
+                <div className="flex gap-3 flex-shrink-0">
                   <button
                     onClick={downloadTemplateCSV}
-                    className="btn-secondary text-sm px-4 py-2 flex items-center gap-2"
+                    className="btn-secondary text-sm px-4 py-2 flex items-center gap-2 whitespace-nowrap"
                   >
                     <span>📥</span>
                     <span>Download Template</span>
                   </button>
                   <button
                     onClick={() => { setRows([]); setMissingJDRows([]); setErrors([]) }}
-                    className="btn-soft text-sm px-4 py-2 flex items-center gap-2"
+                    className="btn-soft text-sm px-4 py-2 flex items-center gap-2 whitespace-nowrap"
                   >
                     <span>🗑️</span>
                     <span>Clear</span>
@@ -403,16 +403,16 @@ function App() {
                 onDragEnter={onDragEnter}
                 onDragLeave={onDragLeave}
                 onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-3xl p-10 text-center cursor-pointer transition-all duration-300 ${isDragging ? 'bg-gradient-to-br from-emerald-50/80 to-blue-50/80 ring-4 ring-emerald-300 scale-105 animate-glow backdrop-blur-sm' : 'hover:bg-gradient-to-br hover:from-gray-50/60 hover:to-blue-50/60 hover:scale-102 backdrop-blur-sm'}`}
+                className={`border-2 border-dashed rounded-3xl p-12 text-center cursor-pointer transition-all duration-300 min-h-[200px] flex flex-col items-center justify-center ${isDragging ? 'bg-gradient-to-br from-emerald-50/80 to-blue-50/80 ring-4 ring-emerald-300 scale-105 animate-glow backdrop-blur-sm' : 'hover:bg-gradient-to-br hover:from-gray-50/60 hover:to-blue-50/60 hover:scale-102 backdrop-blur-sm'}`}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter') fileInputRef.current?.click() }}
               >
                 <div className="text-7xl mb-6 floating">📁</div>
-                <div className="text-gray-700 font-semibold text-xl mb-3">
+                <div className="text-gray-700 font-semibold text-xl mb-4">
                   {isLoading ? '⏳ Processing file...' : '🎯 Drag & drop file here, or click to browse'}
                 </div>
-                <div className="text-sm text-gray-500 mb-6 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm inline-block">Accepted: .csv, .xlsx</div>
+                <div className="text-sm text-gray-500 mb-6 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm">Accepted: .csv, .xlsx</div>
                 {isLoading && (
                   <div className="mt-6">
                     <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
@@ -428,7 +428,7 @@ function App() {
                 />
               </div>
 
-              <div className="mt-8">
+              <div className="mt-10">
                 <label className="block font-semibold mb-4 text-gray-700 flex items-center gap-2">
                   📋 Paste Tabular Data
                 </label>
@@ -440,10 +440,10 @@ function App() {
                     handlePaste(text)
                   }}
                 />
-                <div className="mt-6 flex gap-3">
+                <div className="mt-6 flex justify-start">
                   <button
                     onClick={loadSampleData}
-                    className="btn-accent text-sm px-6 py-3 flex items-center gap-2"
+                    className="btn-accent text-sm px-6 py-3 flex items-center gap-2 whitespace-nowrap"
                   >
                     <span>🎲</span>
                     <span>Load Sample Data</span>
@@ -465,32 +465,32 @@ function App() {
             )}
 
             <div className="glass rounded-3xl shadow-xl overflow-hidden card-hover">
-              <div className="border-b border-gray-200/50 p-6 bg-gradient-to-r from-gray-50/50 to-blue-50/50">
+              <div className="border-b border-gray-200/50 p-8 bg-gradient-to-r from-gray-50/50 to-blue-50/50">
                 {/* Stats Row */}
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <div className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800 text-sm px-4 py-3 font-semibold shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="flex flex-wrap items-center gap-4 mb-6">
+                  <div className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800 text-sm px-5 py-3 font-semibold shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap">
                     <span className="text-lg">📊</span> 
                     <span>Total: {processed.out.length}</span>
                   </div>
-                  <div className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 text-sm px-4 py-3 font-semibold shadow-sm hover:shadow-md transition-all duration-200">
+                  <div className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 text-sm px-5 py-3 font-semibold shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap">
                     <span className="text-lg">⚠️</span> 
                     <span>Missing JD: {processed.missing.length}</span>
                   </div>
-                  <div className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-rose-100 to-rose-200 text-rose-800 text-sm px-4 py-3 font-semibold shadow-sm hover:shadow-md transition-all duration-200">
+                  <div className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-rose-100 to-rose-200 text-rose-800 text-sm px-5 py-3 font-semibold shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap">
                     <span className="text-lg">🚫</span> 
                     <span>Invalid Phone: {processed.invalid.length}</span>
                   </div>
                 </div>
 
                 {/* Search and Actions Row */}
-                <div className="flex items-center gap-4 justify-between overflow-x-auto">
+                <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-4 xl:justify-between">
                   {/* Search Input */}
-                  <div className="relative flex-shrink-0">
+                  <div className="relative flex-shrink-0 w-full xl:w-auto">
                     <input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       placeholder="🔍 Search name or role..."
-                      className="pl-12 pr-4 py-3 text-sm rounded-2xl border-2 border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 w-64 bg-white/80 backdrop-blur-sm"
+                      className="pl-12 pr-4 py-3 text-sm rounded-2xl border-2 border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 w-full xl:w-64 bg-white/80 backdrop-blur-sm"
                     />
                     <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">
                       🔍
@@ -498,9 +498,9 @@ function App() {
                 </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="flex flex-wrap items-center gap-3 flex-shrink-0 justify-center xl:justify-end">
                   <button
-                      className="btn-primary text-sm px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+                      className="btn-primary text-sm px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap min-w-[140px] justify-center"
                     disabled={!processed.out.length}
                     onClick={() => exportCSV(processed.out, 'whatsapp_links.csv')}
                   >
@@ -508,7 +508,7 @@ function App() {
                       <span>Download CSV</span>
                   </button>
                   <button
-                      className="btn-secondary text-sm px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+                      className="btn-secondary text-sm px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap min-w-[140px] justify-center"
                     disabled={!processed.missing.length}
                     onClick={() => exportCSV(processed.missing, 'missing_jd_links.csv')}
                   >
@@ -516,7 +516,7 @@ function App() {
                       <span>Missing JD</span>
                     </button>
                     <button
-                      className="px-4 py-3 text-sm rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 whitespace-nowrap"
+                      className="px-4 py-3 text-sm rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 whitespace-nowrap min-w-[140px] justify-center"
                       disabled={!processed.invalid.length}
                       onClick={exportInvalidCSV}
                     >
@@ -524,7 +524,7 @@ function App() {
                       <span>Invalid</span>
                     </button>
                     <button
-                      className="btn-accent text-sm px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+                      className="btn-accent text-sm px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap min-w-[140px] justify-center"
                       disabled={!processed.out.length}
                       onClick={copyAllLinks}
                     >
@@ -535,22 +535,22 @@ function App() {
                 </div>
               </div>
 
-              <div className="px-4 pt-4">
+              <div className="px-6 pt-6">
                 <div className="inline-flex rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 p-1 shadow-inner">
                   <button
-                    className={`px-4 py-2 text-sm rounded-xl transition-all duration-200 font-medium ${activeTab === 'results' ? 'bg-white shadow-lg text-emerald-700 scale-105' : 'text-gray-600 hover:text-gray-800 hover:scale-102'}`}
+                    className={`px-5 py-3 text-sm rounded-xl transition-all duration-200 font-medium whitespace-nowrap ${activeTab === 'results' ? 'bg-white shadow-lg text-emerald-700 scale-105' : 'text-gray-600 hover:text-gray-800 hover:scale-102'}`}
                     onClick={() => setActiveTab('results')}
                   >
                     📊 Results
                   </button>
                   <button
-                    className={`px-4 py-2 text-sm rounded-xl transition-all duration-200 font-medium ${activeTab === 'missing' ? 'bg-white shadow-lg text-emerald-700 scale-105' : 'text-gray-600 hover:text-gray-800 hover:scale-102'}`}
+                    className={`px-5 py-3 text-sm rounded-xl transition-all duration-200 font-medium whitespace-nowrap ${activeTab === 'missing' ? 'bg-white shadow-lg text-emerald-700 scale-105' : 'text-gray-600 hover:text-gray-800 hover:scale-102'}`}
                     onClick={() => setActiveTab('missing')}
                   >
                     ⚠️ Missing JD
                   </button>
                   <button
-                    className={`px-4 py-2 text-sm rounded-xl transition-all duration-200 font-medium ${activeTab === 'invalid' ? 'bg-white shadow-lg text-emerald-700 scale-105' : 'text-gray-600 hover:text-gray-800 hover:scale-102'}`}
+                    className={`px-5 py-3 text-sm rounded-xl transition-all duration-200 font-medium whitespace-nowrap ${activeTab === 'invalid' ? 'bg-white shadow-lg text-emerald-700 scale-105' : 'text-gray-600 hover:text-gray-800 hover:scale-102'}`}
                     onClick={() => setActiveTab('invalid')}
                   >
                     🚫 Invalid
@@ -558,9 +558,9 @@ function App() {
                 </div>
               </div>
 
-              <div className="p-4 overflow-x-auto">
+              <div className="p-6 overflow-x-auto">
                 {isProcessing && (
-                  <div className="flex items-center justify-center py-12">
+                  <div className="flex items-center justify-center py-16">
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
                       <div className="text-lg font-semibold text-gray-600 mb-2">Processing data...</div>
@@ -575,9 +575,9 @@ function App() {
             </div>
           </div>
 
-          <aside className="space-y-6 animate-slide-in-right">
-            <div className="glass-soft rounded-3xl shadow-xl p-6 card-hover">
-              <h3 className="font-bold text-xl gradient-text-emerald mb-6 flex items-center gap-2">
+          <aside className="space-y-8 animate-slide-in-right">
+            <div className="glass-soft rounded-3xl shadow-xl p-8 card-hover">
+              <h3 className="font-bold text-xl gradient-text-emerald mb-8 flex items-center gap-2">
                 ⚙️ Settings
               </h3>
               <div className="space-y-6">
@@ -627,43 +627,43 @@ function App() {
                 </div>
               </div>
             </div>
-            <div className="glass-soft rounded-3xl shadow-xl p-6 card-hover">
-              <h3 className="font-bold text-xl gradient-text-emerald mb-6 flex items-center gap-2">
+            <div className="glass-soft rounded-3xl shadow-xl p-8 card-hover">
+              <h3 className="font-bold text-xl gradient-text-emerald mb-8 flex items-center gap-2">
                 📚 Instructions
               </h3>
-              <ul className="space-y-4 text-sm text-gray-600">
-                <li className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/30 transition-colors duration-200">
+              <ul className="space-y-6 text-sm text-gray-600">
+                <li className="flex items-start gap-3 p-4 rounded-xl hover:bg-white/30 transition-colors duration-200">
                   <span className="text-emerald-500 mt-1 text-lg">•</span>
                   <span>Headers required: <span className="font-mono bg-white/60 px-2 py-1 rounded-lg text-emerald-600">Name, Phone, Current Role, Key Skills, Profile Summary, JD Link</span></span>
                 </li>
-                <li className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/30 transition-colors duration-200">
+                <li className="flex items-start gap-3 p-4 rounded-xl hover:bg-white/30 transition-colors duration-200">
                   <span className="text-emerald-500 mt-1 text-lg">•</span>
                   <span>We clean phone numbers to last 10 digits and prefix with country code</span>
                 </li>
-                <li className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/30 transition-colors duration-200">
+                <li className="flex items-start gap-3 p-4 rounded-xl hover:bg-white/30 transition-colors duration-200">
                   <span className="text-emerald-500 mt-1 text-lg">•</span>
                   <span>WhatsApp links open in a new tab automatically</span>
                 </li>
               </ul>
             </div>
 
-            <div className="glass-soft rounded-3xl shadow-xl p-6 card-hover">
-              <h3 className="font-bold text-xl gradient-text-emerald mb-6 flex items-center gap-2">
+            <div className="glass-soft rounded-3xl shadow-xl p-8 card-hover">
+              <h3 className="font-bold text-xl gradient-text-emerald mb-8 flex items-center gap-2">
                 ℹ️ About
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed p-4 rounded-xl bg-white/30 backdrop-blur-sm">
-                Messages are personalized per candidate and encoded for WhatsApp.
+              <p className="text-sm text-gray-600 leading-relaxed p-6 rounded-xl bg-white/30 backdrop-blur-sm">
+                Messages are personalized per candidate and encoded for WhatsApp. 
                 All data processing happens in your browser for privacy.
               </p>
             </div>
           </aside>
         </section>
-        <footer className="text-center py-8 animate-fade-in">
-          <div className="glass rounded-2xl p-4 max-w-md mx-auto">
+        <footer className="text-center py-12 animate-fade-in">
+          <div className="glass rounded-2xl p-6 max-w-lg mx-auto">
             <div className="text-sm text-gray-600 font-medium">
               🚀 Built for HR outreach • Data stays in your browser
             </div>
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="text-xs text-gray-400 mt-2">
               Made with ❤️ for efficient recruitment
             </div>
           </div>

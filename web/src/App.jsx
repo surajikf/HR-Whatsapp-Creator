@@ -185,6 +185,7 @@ Talent Acquisition Specialist
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '100%', margin: '0 auto' }}>
+      {/* Full width layout - no sidebar sections */}
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>WhatsApp Link Generator</h1>
       <p style={{ textAlign: 'center', marginBottom: '30px' }}>
         Upload CSV/Excel or paste data to generate personalized messages and links.
@@ -231,7 +232,7 @@ Talent Acquisition Specialist
                     handlePaste(text)
                   }}
                 />
-            </div>
+              </div>
             </div>
 
             {errors.length > 0 && (
@@ -246,37 +247,37 @@ Talent Acquisition Specialist
             <div style={{ padding: '10px', borderBottom: '1px solid #ccc', backgroundColor: '#f5f5f5', width: '100%' }}>
               <span style={{ marginRight: '20px' }}>Total: {processed.out.length}</span>
               <span style={{ marginRight: '20px' }}>Missing JD: {processed.missing.length}</span>
-              <button
+                    <button
                 style={{ marginRight: '10px', padding: '8px 16px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                disabled={!processed.out.length}
-                onClick={() => exportCSV(processed.out, 'whatsapp_links.csv')}
-              >
+                      disabled={!processed.out.length}
+                      onClick={() => exportCSV(processed.out, 'whatsapp_links.csv')}
+                    >
                 Download CSV
-              </button>
-              <button
+                    </button>
+                    <button
                 style={{ padding: '8px 16px', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                disabled={!processed.missing.length}
-                onClick={() => exportCSV(processed.missing, 'missing_jd_links.csv')}
-              >
+                      disabled={!processed.missing.length}
+                      onClick={() => exportCSV(processed.missing, 'missing_jd_links.csv')}
+                    >
                 Export Missing JD Report
-              </button>
-            </div>
+                    </button>
+              </div>
 
             <div style={{ padding: '10px', width: '100%' }}>
               <div style={{ marginBottom: '10px' }}>
-                <button
+                  <button
                   style={{ marginRight: '10px', padding: '8px 16px', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', backgroundColor: activeTab === 'results' ? '#e0e0e0' : 'white' }}
-                  onClick={() => setActiveTab('results')}
-                >
+                    onClick={() => setActiveTab('results')}
+                  >
                   Results
-                </button>
-                <button
+                  </button>
+                  <button
                   style={{ padding: '8px 16px', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', backgroundColor: activeTab === 'missing' ? '#e0e0e0' : 'white' }}
-                  onClick={() => setActiveTab('missing')}
-                >
+                    onClick={() => setActiveTab('missing')}
+                  >
                   Missing JD Links
-                </button>
-              </div>
+                  </button>
+                </div>
 
               <div style={{ overflowX: 'auto', width: '100%' }}>
                 {activeTab === 'results' ? (
@@ -294,8 +295,8 @@ Talent Acquisition Specialist
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                 Edit your message template:
-              </label>
-              <textarea
+                  </label>
+                  <textarea
                 value={messageTemplate}
                 onChange={(e) => setMessageTemplate(e.target.value)}
                 style={{ 
@@ -317,7 +318,7 @@ Talent Acquisition Specialist
 
             {/* Live Preview */}
             {processed.out.length > 0 && (
-              <div>
+                  <div>
                 <h4 style={{ marginBottom: '10px' }}>Live Preview (First Candidate):</h4>
                 <div style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px', border: '1px solid #ddd' }}>
                   <pre style={{ 
@@ -330,14 +331,14 @@ Talent Acquisition Specialist
                   }}>
                     {generateMessage(processed.out[0], messageTemplate)}
                   </pre>
-                </div>
+                  </div>
                 <p style={{ fontSize: '12px', color: '#666', marginTop: '10px', marginBottom: 0 }}>
                   This preview updates as you edit the template above. All messages will use this template.
                 </p>
-              </div>
+                </div>
             )}
-          </div>
-        </div>
+                  </div>
+                </div>
       </div>
     </div>
   )

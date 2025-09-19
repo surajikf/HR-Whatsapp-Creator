@@ -19,29 +19,30 @@ function cleanPhone(raw) {
   return last10 ? `91${last10}` : ''
 }
 
-function generateMessage(row) {
-  const name = row['Name']?.toString().trim() || ''
-  const role = row['Current Role']?.toString().trim() || ''
-  const jd = row['JD Link']?.toString().trim() || ''
+function generateMessage(row, template) {
+  let message = template || `Dear *{Name}*,
+I am *Vani, Recruiter at I Knowledge Factory Pvt. Ltd.* – a full-service *digital branding and marketing agency*.
 
-  const lines = [
-    `Dear *${name}*,`,
-    `I am *Vani, Recruiter at I Knowledge Factory Pvt. Ltd.* – a full-service *digital branding and marketing agency*.`,
-    '',
-    `We reviewed your profile on *Naukri Portal* and found it suitable for the role of *${role}*.`,
-    '',
-    `If you are open to exploring opportunities with us, please review the *Job Description on our website and apply here*: ${jd}`,
-    '',
-    `Once done, I will connect with you to schedule the *screening round*.`,
-    '',
-    `Best regards,`,
-    `*Vani Jha*`,
-    `Talent Acquisition Specialist`,
-    `*+91 9665079317*`,
-    `*www.ikf.co.in*`,
-  ]
+We reviewed your profile on *Naukri Portal* and found it suitable for the role of *{Current Role}*.
 
-  return lines.join('\n')
+If you are open to exploring opportunities with us, please review the *Job Description on our website and apply here*: {JD Link}
+
+Once done, I will connect with you to schedule the *screening round*.
+
+Best regards,
+*Vani Jha*
+Talent Acquisition Specialist
+*+91 9665079317*
+*www.ikf.co.in*`
+
+  // Replace placeholders with actual values
+  Object.keys(row).forEach(key => {
+    const placeholder = `{${key}}`
+    const value = row[key]?.toString().trim() || ''
+    message = message.replace(new RegExp(placeholder, 'g'), value)
+  })
+
+  return message
 }
 
 function encodeForWhatsApp(text) {
@@ -61,6 +62,20 @@ function App() {
   const [missingJDRows, setMissingJDRows] = useState([])
   const [activeTab, setActiveTab] = useState('results')
   const [errors, setErrors] = useState([])
+  const [messageTemplate, setMessageTemplate] = useState(`Dear *{Name}*,
+I am *Vani, Recruiter at I Knowledge Factory Pvt. Ltd.* – a full-service *digital branding and marketing agency*.
+
+We reviewed your profile on *Naukri Portal* and found it suitable for the role of *{Current Role}*.
+
+If you are open to exploring opportunities with us, please review the *Job Description on our website and apply here*: {JD Link}
+
+Once done, I will connect with you to schedule the *screening round*.
+
+Best regards,
+*Vani Jha*
+Talent Acquisition Specialist
+*+91 9665079317*
+*www.ikf.co.in*`)
   const fileInputRef = useRef(null)
   const dropRef = useRef(null)
 
@@ -71,7 +86,7 @@ function App() {
     for (const r of rows) {
       const normalized = ensureColumns(r)
       const phone = cleanPhone(normalized['Phone'])
-      const message = generateMessage(normalized)
+      const message = generateMessage(normalized, messageTemplate)
       const encoded = encodeForWhatsApp(message)
       const link = phone ? `https://wa.me/${phone}?text=${encoded}` : ''
       const record = {
@@ -85,7 +100,7 @@ function App() {
       if (!normalized['JD Link']) missing.push(record)
     }
     return { out, missing }
-  }, [rows])
+  }, [rows, messageTemplate])
 
   function onFilesSelected(fileList) {
     const file = fileList?.[0]
@@ -273,27 +288,55 @@ function App() {
             </div>
           </div>
 
-          {/* Message Preview Section */}
-          {processed.out.length > 0 && (
-            <div style={{ border: '1px solid #ccc', padding: '20px', marginTop: '20px', borderRadius: '8px' }}>
-              <h3 style={{ marginBottom: '15px' }}>Message Preview</h3>
-              <div style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px', border: '1px solid #ddd' }}>
-                <pre style={{ 
-                  whiteSpace: 'pre-wrap', 
-                  fontFamily: 'Arial, sans-serif', 
-                  fontSize: '14px', 
-                  lineHeight: '1.5',
-                  margin: 0,
-                  color: '#333'
-                }}>
-                  {generateMessage(processed.out[0])}
-                </pre>
-              </div>
-              <p style={{ fontSize: '12px', color: '#666', marginTop: '10px', marginBottom: 0 }}>
-                Preview shows message for first candidate. Each message is personalized with candidate's name and role.
+          {/* Message Template Editor */}
+          <div style={{ border: '1px solid #ccc', padding: '20px', marginTop: '20px', borderRadius: '8px' }}>
+            <h3 style={{ marginBottom: '15px' }}>Message Template Editor</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Edit your message template:
+              </label>
+              <textarea
+                value={messageTemplate}
+                onChange={(e) => setMessageTemplate(e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  height: '200px', 
+                  padding: '10px', 
+                  border: '1px solid #ccc', 
+                  borderRadius: '4px',
+                  fontFamily: 'Arial, sans-serif',
+                  fontSize: '14px',
+                  lineHeight: '1.5'
+                }}
+                placeholder="Use {Name}, {Current Role}, {JD Link} as placeholders..."
+              />
+              <p style={{ fontSize: '12px', color: '#666', marginTop: '5px', marginBottom: 0 }}>
+                Use placeholders: {Name}, {Current Role}, {JD Link}, {Key Skills}, {Profile Summary}
               </p>
             </div>
-          )}
+
+            {/* Live Preview */}
+            {processed.out.length > 0 && (
+              <div>
+                <h4 style={{ marginBottom: '10px' }}>Live Preview (First Candidate):</h4>
+                <div style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px', border: '1px solid #ddd' }}>
+                  <pre style={{ 
+                    whiteSpace: 'pre-wrap', 
+                    fontFamily: 'Arial, sans-serif', 
+                    fontSize: '14px', 
+                    lineHeight: '1.5',
+                    margin: 0,
+                    color: '#333'
+                  }}>
+                    {generateMessage(processed.out[0], messageTemplate)}
+                  </pre>
+                </div>
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '10px', marginBottom: 0 }}>
+                  This preview updates as you edit the template above. All messages will use this template.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

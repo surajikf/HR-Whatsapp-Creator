@@ -243,6 +243,56 @@ Talent Acquisition Specialist
               </div>
             )}
 
+          {/* Message Template Editor */}
+          <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px', borderRadius: '8px' }}>
+            <h3 style={{ marginBottom: '15px' }}>Message Template Editor</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Edit your message template:
+              </label>
+              <textarea
+                value={messageTemplate}
+                onChange={(e) => setMessageTemplate(e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  height: '200px', 
+                  padding: '10px', 
+                  border: '1px solid #ccc', 
+                  borderRadius: '4px',
+                  fontFamily: 'Arial, sans-serif',
+                  fontSize: '14px',
+                  lineHeight: '1.5'
+                }}
+                placeholder="Use {Name}, {Current Role}, {JD Link} as placeholders..."
+              />
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '5px', marginBottom: 0 }}>
+                  Use placeholders: {'{Name}'}, {'{Current Role}'}, {'{JD Link}'}, {'{Key Skills}'}, {'{Profile Summary}'}
+                </p>
+            </div>
+
+            {/* Live Preview */}
+            {processed.out.length > 0 && (
+                  <div>
+                <h4 style={{ marginBottom: '10px' }}>Live Preview (First Candidate):</h4>
+                <div style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px', border: '1px solid #ddd' }}>
+                  <pre style={{ 
+                    whiteSpace: 'pre-wrap', 
+                    fontFamily: 'Arial, sans-serif', 
+                    fontSize: '14px', 
+                    lineHeight: '1.5',
+                    margin: 0,
+                    color: '#333'
+                  }}>
+                    {generateMessage(processed.out[0], messageTemplate)}
+                  </pre>
+                </div>
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '10px', marginBottom: 0 }}>
+                  This preview updates as you edit the template above. All messages will use this template.
+                </p>
+              </div>
+            )}
+          </div>
+
           <div style={{ border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden', width: '100%' }}>
             <div style={{ padding: '10px', borderBottom: '1px solid #ccc', backgroundColor: '#f5f5f5', width: '100%' }}>
               <span style={{ marginRight: '20px' }}>Total: {processed.out.length}</span>
@@ -288,56 +338,6 @@ Talent Acquisition Specialist
               </div>
             </div>
           </div>
-
-          {/* Message Template Editor */}
-          <div style={{ border: '1px solid #ccc', padding: '20px', marginTop: '20px', borderRadius: '8px' }}>
-            <h3 style={{ marginBottom: '15px' }}>Message Template Editor</h3>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                Edit your message template:
-                  </label>
-                  <textarea
-                value={messageTemplate}
-                onChange={(e) => setMessageTemplate(e.target.value)}
-                style={{ 
-                  width: '100%', 
-                  height: '200px', 
-                  padding: '10px', 
-                  border: '1px solid #ccc', 
-                  borderRadius: '4px',
-                  fontFamily: 'Arial, sans-serif',
-                  fontSize: '14px',
-                  lineHeight: '1.5'
-                }}
-                placeholder="Use {Name}, {Current Role}, {JD Link} as placeholders..."
-              />
-                <p style={{ fontSize: '12px', color: '#666', marginTop: '5px', marginBottom: 0 }}>
-                  Use placeholders: {'{Name}'}, {'{Current Role}'}, {'{JD Link}'}, {'{Key Skills}'}, {'{Profile Summary}'}
-                </p>
-            </div>
-
-            {/* Live Preview */}
-            {processed.out.length > 0 && (
-                  <div>
-                <h4 style={{ marginBottom: '10px' }}>Live Preview (First Candidate):</h4>
-                <div style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px', border: '1px solid #ddd' }}>
-                  <pre style={{ 
-                    whiteSpace: 'pre-wrap', 
-                    fontFamily: 'Arial, sans-serif', 
-                    fontSize: '14px', 
-                    lineHeight: '1.5',
-                    margin: 0,
-                    color: '#333'
-                  }}>
-                    {generateMessage(processed.out[0], messageTemplate)}
-                  </pre>
-                  </div>
-                <p style={{ fontSize: '12px', color: '#666', marginTop: '10px', marginBottom: 0 }}>
-                  This preview updates as you edit the template above. All messages will use this template.
-                </p>
-                </div>
-            )}
-                  </div>
                 </div>
       </div>
     </div>

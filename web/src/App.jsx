@@ -555,13 +555,13 @@ function App() {
         <footer className="text-xs text-gray-500 text-center py-4">
           Built for HR outreach. Data stays in your browser.
         </footer>
+        {toast && (
+          <div className="fixed bottom-4 right-4 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg/50">
+            {toast}
+          </div>
+        )}
       </div>
     </div>
-    {toast && (
-      <div className="fixed bottom-4 right-4 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg/50 animate-fade">
-        {toast}
-      </div>
-    )}
   )
 }
 

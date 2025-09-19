@@ -137,11 +137,8 @@ function App() {
   const [search, setSearch] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [toast, setToast] = useState(null)
-  const [globalCount, setGlobalCount] = useState(null)
-
-  // Global counter config (CountAPI)
-  const COUNTER_NS = 'surajikf'
-  const COUNTER_KEY = 'hr-whatsapp-messages'
+  const [isLoading, setIsLoading] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   // Load from localStorage
   useEffect(() => {
@@ -159,51 +156,6 @@ function App() {
     const payload = { countryCode, template, dedupeByPhone, autoDetectCountry }
     try { localStorage.setItem('hwc_settings', JSON.stringify(payload)) } catch {}
   }, [countryCode, template, dedupeByPhone, autoDetectCountry])
-
-  // Initialize global counter
-  useEffect(() => {
-    async function initCounter() {
-      try {
-        const getRes = await fetch(`https://api.countapi.xyz/get/${COUNTER_NS}/${COUNTER_KEY}`, { 
-          method: 'GET',
-          headers: { 'Accept': 'application/json' }
-        })
-        if (getRes.ok) {
-          const j = await getRes.json()
-          setGlobalCount(Number(j?.value || 0))
-          return
-        }
-      } catch {}
-      try {
-        const createRes = await fetch(`https://api.countapi.xyz/create?namespace=${COUNTER_NS}&key=${COUNTER_KEY}&value=0`, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' }
-        })
-        if (createRes.ok) {
-          const j = await createRes.json()
-          setGlobalCount(Number(j?.value || 0))
-        }
-      } catch {}
-      // Fallback: set to 0 if API fails
-      setGlobalCount(0)
-    }
-    initCounter()
-  }, [])
-
-  async function incrementGlobalCount(amount) {
-    const amt = Math.max(1, Math.floor(Number(amount) || 1))
-    try {
-      const res = await fetch(`https://api.countapi.xyz/update/${COUNTER_NS}/${COUNTER_KEY}?amount=${amt}`, { 
-        method: 'GET',
-        keepalive: true,
-        headers: { 'Accept': 'application/json' }
-      })
-      if (res.ok) {
-        const j = await res.json()
-        if (typeof j?.value === 'number') setGlobalCount(j.value)
-      }
-    } catch {}
-  }
 
   const processed = useMemo(() => {
     const out = []
@@ -251,32 +203,36 @@ function App() {
   function onFilesSelected(fileList) {
     const file = fileList?.[0]
     if (!file) return
+    setIsLoading(true)
     const name = file.name.toLowerCase()
     if (name.endsWith('.csv')) {
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
-        complete: (res) => handleParsedRows(res.data),
+        complete: (res) => { handleParsedRows(res.data); setIsLoading(false) },
         error: (err) => setErrors([`CSV parse error: ${err.message}`]),
       })
     } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
       const reader = new FileReader()
       reader.onload = (e) => {
+        setIsProcessing(true)
         const data = new Uint8Array(e.target.result)
         const wb = XLSX.read(data, { type: 'array' })
         const firstSheet = wb.SheetNames[0]
         const ws = wb.Sheets[firstSheet]
         const json = XLSX.utils.sheet_to_json(ws, { defval: '' })
-        handleParsedRows(json)
+        setTimeout(() => { handleParsedRows(json); setIsProcessing(false); setIsLoading(false) }, 800)
       }
       reader.onerror = () => setErrors(['Excel read error'])
       reader.readAsArrayBuffer(file)
     } else {
       setErrors(['Unsupported file type. Use .csv or .xlsx'])
+      setIsLoading(false)
     }
   }
 
   function handleParsedRows(list) {
+    setIsProcessing(true)
     const normalized = list.map(ensureColumns)
     const missingCols = REQUIRED_COLUMNS.filter(c => !(c in normalized[0] || {}))
     if (missingCols.length) {
@@ -284,8 +240,11 @@ function App() {
     } else {
       setErrors([])
     }
-    setRows(normalized)
-    setMissingJDRows(normalized.filter(r => !r['JD Link']))
+    setTimeout(() => {
+      setRows(normalized)
+      setMissingJDRows(normalized.filter(r => !r['JD Link']))
+      setIsProcessing(false)
+    }, 500)
   }
 
   function handlePaste(text) {
@@ -322,7 +281,6 @@ function App() {
     if (!links) return
     navigator.clipboard.writeText(links)
     showToast(`Copied ${processed.out.filter(r => r.WhatsApp_Link).length} links`)  
-    incrementGlobalCount(processed.out.filter(r => r.WhatsApp_Link).length)
   }
 
   function exportInvalidCSV() {
@@ -358,6 +316,7 @@ function App() {
   }
 
   function loadSampleData() {
+    setIsProcessing(true)
     const sample = [
       {
         Name: 'Aarav Mehta',
@@ -376,14 +335,16 @@ function App() {
         'JD Link': 'https://www.ikf.co.in/careers/ux-designer',
       },
     ]
-    handleParsedRows(sample)
-    showToast('Loaded sample data')
+    setTimeout(() => {
+      handleParsedRows(sample)
+      showToast('Loaded sample data')
+    }, 300)
   }
 
   return (
     <div className="min-h-screen p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <header className="text-center">
+        <header className="text-center animate-fade-in">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-600 to-sky-600 bg-clip-text text-transparent">
             WhatsApp Link Generator
           </h1>
@@ -392,21 +353,21 @@ function App() {
           </p>
         </header>
 
-        <section className="grid lg:grid-cols-3 gap-6">
+        <section className="grid lg:grid-cols-3 gap-6 animate-slide-up">
           <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur">
+            <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur hover:shadow-lg transition-all duration-300">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-semibold text-lg">Import Candidates</h2>
                 <div className="flex gap-2">
                   <button
                     onClick={downloadTemplateCSV}
-                    className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
+                    className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors duration-200"
                   >
                     Download Template
                   </button>
                   <button
                     onClick={() => { setRows([]); setMissingJDRows([]); setErrors([]) }}
-                    className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
+                    className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors duration-200"
                   >
                     Clear
                   </button>
@@ -420,13 +381,20 @@ function App() {
                 onDragEnter={onDragEnter}
                 onDragLeave={onDragLeave}
                 onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition ${isDragging ? 'bg-emerald-50 ring-2 ring-emerald-400' : 'hover:bg-gray-50'}`}
+                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-300 ${isDragging ? 'bg-emerald-50 ring-2 ring-emerald-400 scale-105' : 'hover:bg-gray-50 hover:scale-102'}`}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter') fileInputRef.current?.click() }}
               >
-                <div className="text-gray-700 font-medium">Drag & drop file here, or click to browse</div>
+                <div className="text-gray-700 font-medium">
+                  {isLoading ? 'Processing file...' : 'Drag & drop file here, or click to browse'}
+                </div>
                 <div className="text-xs text-gray-500 mt-1">Accepted: .csv, .xlsx</div>
+                {isLoading && (
+                  <div className="mt-3">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
+                  </div>
+                )}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -449,7 +417,7 @@ function App() {
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={loadSampleData}
-                    className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
+                    className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors duration-200"
                   >
                     Load Sample Data
                   </button>
@@ -465,14 +433,8 @@ function App() {
               </div>
             )}
 
-            <div className="bg-white/90 rounded-2xl shadow-md overflow-hidden">
+            <div className="bg-white/90 rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300">
               <div className="flex flex-wrap items-center gap-2 border-b p-2 sm:p-3">
-                <div className="inline-flex items-center gap-1 rounded-lg bg-purple-100 text-purple-800 text-xs sm:text-sm px-3 py-1">
-                  <span>🌍</span>
-                  <span>
-                    {globalCount === null ? 'Loading…' : `Total messages generated: ${globalCount.toLocaleString()}`}
-                  </span>
-                </div>
                 <div className="inline-flex items-center gap-1 rounded-lg bg-gray-100 text-gray-700 text-xs sm:text-sm px-3 py-1">
                   <span>📊</span> <span>Total: {processed.out.length}</span>
                 </div>
@@ -488,31 +450,31 @@ function App() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search name or role"
-                    className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200"
+                    className="px-3 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
                   />
                   <button
-                    className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
+                    className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 transition-all duration-200 hover:scale-105"
                     disabled={!processed.out.length}
-                    onClick={() => { exportCSV(processed.out, 'whatsapp_links.csv'); incrementGlobalCount(processed.out.filter(r => r.WhatsApp_Link).length) }}
+                    onClick={() => exportCSV(processed.out, 'whatsapp_links.csv')}
                   >
                     Download CSV
                   </button>
                   <button
-                    className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50"
+                    className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50 transition-all duration-200 hover:scale-105"
                     disabled={!processed.missing.length}
                     onClick={() => exportCSV(processed.missing, 'missing_jd_links.csv')}
                   >
                     Export Missing JD Report
                   </button>
                   <button
-                    className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-rose-600 hover:bg-rose-700 text-white disabled:opacity-50"
+                    className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-rose-600 hover:bg-rose-700 text-white disabled:opacity-50 transition-all duration-200 hover:scale-105"
                     disabled={!processed.invalid.length}
                     onClick={exportInvalidCSV}
                   >
                     Export Invalid Phones
                   </button>
                   <button
-                    className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-sky-600 hover:bg-sky-700 text-white disabled:opacity-50"
+                    className="px-3 py-2 text-xs sm:text-sm rounded-lg bg-sky-600 hover:bg-sky-700 text-white disabled:opacity-50 transition-all duration-200 hover:scale-105"
                     disabled={!processed.out.length}
                     onClick={copyAllLinks}
                   >
@@ -524,19 +486,19 @@ function App() {
               <div className="px-3 pt-2">
                 <div className="inline-flex rounded-xl bg-gray-100 p-1">
                   <button
-                    className={`px-3 py-1 text-xs sm:text-sm rounded-lg ${activeTab === 'results' ? 'bg-white shadow text-emerald-700' : 'text-gray-600'}`}
+                    className={`px-3 py-1 text-xs sm:text-sm rounded-lg transition-all duration-200 ${activeTab === 'results' ? 'bg-white shadow text-emerald-700' : 'text-gray-600 hover:text-gray-800'}`}
                     onClick={() => setActiveTab('results')}
                   >
                     Results
                   </button>
                   <button
-                    className={`px-3 py-1 text-xs sm:text-sm rounded-lg ${activeTab === 'missing' ? 'bg-white shadow text-emerald-700' : 'text-gray-600'}`}
+                    className={`px-3 py-1 text-xs sm:text-sm rounded-lg transition-all duration-200 ${activeTab === 'missing' ? 'bg-white shadow text-emerald-700' : 'text-gray-600 hover:text-gray-800'}`}
                     onClick={() => setActiveTab('missing')}
                   >
                     Missing JD Links
                   </button>
                   <button
-                    className={`px-3 py-1 text-xs sm:text-sm rounded-lg ${activeTab === 'invalid' ? 'bg-white shadow text-emerald-700' : 'text-gray-600'}`}
+                    className={`px-3 py-1 text-xs sm:text-sm rounded-lg transition-all duration-200 ${activeTab === 'invalid' ? 'bg-white shadow text-emerald-700' : 'text-gray-600 hover:text-gray-800'}`}
                     onClick={() => setActiveTab('invalid')}
                   >
                     Invalid Phones
@@ -545,6 +507,12 @@ function App() {
               </div>
 
               <div className="p-3 overflow-x-auto">
+                {isProcessing && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                    <span className="ml-3 text-gray-600">Processing data...</span>
+                  </div>
+                )}
                 {activeTab === 'results' && <ResultsTable data={processed.out} />}
                 {activeTab === 'missing' && <ResultsTable data={processed.missing} />}
                 {activeTab === 'invalid' && <ResultsTable data={processed.invalid} />}
@@ -552,8 +520,8 @@ function App() {
             </div>
           </div>
 
-          <aside className="space-y-6">
-            <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur">
+          <aside className="space-y-6 animate-slide-in-right">
+            <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur hover:shadow-lg transition-all duration-300">
               <h3 className="font-semibold mb-2">Settings</h3>
               <div className="space-y-3 text-sm">
                 <div>
@@ -561,7 +529,7 @@ function App() {
                   <input
                     value={countryCode}
                     onChange={(e) => setCountryCode(e.target.value)}
-                    className="w-full border rounded-lg p-2"
+                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
                     placeholder="e.g. 91"
                   />
                 </div>
@@ -571,7 +539,7 @@ function App() {
                   <textarea
                     value={template}
                     onChange={(e) => setTemplate(e.target.value)}
-                    className="w-full h-40 border rounded-lg p-2 font-mono"
+                    className="w-full h-40 border rounded-lg p-2 font-mono focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
                   />
                 </div>
                 <label className="inline-flex items-center gap-2">
@@ -579,6 +547,7 @@ function App() {
                     type="checkbox"
                     checked={dedupeByPhone}
                     onChange={(e) => setDedupeByPhone(e.target.checked)}
+                    className="rounded focus:ring-2 focus:ring-emerald-500"
                   />
                   <span>Remove duplicates by phone</span>
                 </label>
@@ -587,12 +556,13 @@ function App() {
                     type="checkbox"
                     checked={autoDetectCountry}
                     onChange={(e) => setAutoDetectCountry(e.target.checked)}
+                    className="rounded focus:ring-2 focus:ring-emerald-500"
                   />
                   <span>Auto-detect country code from phone</span>
                 </label>
               </div>
             </div>
-            <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur">
+            <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur hover:shadow-lg transition-all duration-300">
               <h3 className="font-semibold mb-2">Instructions</h3>
               <ul className="text-sm text-gray-600 list-disc ml-5 space-y-1">
                 <li>Headers required: <span className="font-mono">Name, Phone, Current Role, Key Skills, Profile Summary, JD Link</span>.</li>
@@ -601,7 +571,7 @@ function App() {
               </ul>
             </div>
 
-            <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur">
+            <div className="rounded-2xl shadow-md p-5 bg-white/90 backdrop-blur hover:shadow-lg transition-all duration-300">
               <h3 className="font-semibold mb-2">About</h3>
               <p className="text-sm text-gray-600">
                 Messages are personalized per candidate and encoded for WhatsApp.
@@ -609,11 +579,11 @@ function App() {
             </div>
           </aside>
         </section>
-        <footer className="text-xs text-gray-500 text-center py-4">
+        <footer className="text-xs text-gray-500 text-center py-4 animate-fade-in">
           Built for HR outreach. Data stays in your browser.
         </footer>
         {toast && (
-          <div className="fixed bottom-4 right-4 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg/50">
+          <div className="fixed bottom-4 right-4 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg/50 animate-slide-in-up">
             {toast}
           </div>
         )}
@@ -643,13 +613,13 @@ function ResultsTable({ data }) {
         </thead>
         <tbody>
           {data.map((r, idx) => (
-            <tr key={idx} className={"border-t " + (idx % 2 ? 'bg-white' : 'bg-gray-50/50') + ' hover:bg-emerald-50/40'}>
+            <tr key={idx} className={"border-t " + (idx % 2 ? 'bg-white' : 'bg-gray-50/50') + ' hover:bg-emerald-50/40 transition-all duration-200 animate-fade-in'} style={{ animationDelay: `${idx * 50}ms` }}>
               <td className="px-3 py-2 whitespace-nowrap">{r['Name']}</td>
               <td className="px-3 py-2 whitespace-nowrap">{r['Current Role']}</td>
               <td className="px-3 py-2 whitespace-nowrap font-mono text-xs">{r['Phone']}</td>
               <td className="px-3 py-2 max-w-[280px] truncate">
                 {r['JD Link'] ? (
-                  <a href={r['JD Link']} target="_blank" className="text-emerald-700 underline">Open JD</a>
+                  <a href={r['JD Link']} target="_blank" className="text-emerald-700 underline hover:text-emerald-800 transition-colors duration-200">Open JD</a>
                 ) : (
                   <span className="text-gray-400">—</span>
                 )}
@@ -659,8 +629,7 @@ function ResultsTable({ data }) {
                   <a
                     href={r['WhatsApp_Link']}
                     target="_blank"
-                    className="inline-block px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => incrementGlobalCount(1)}
+                    className="inline-block px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-all duration-200 hover:scale-105"
                   >
                     Send on WhatsApp
                   </a>

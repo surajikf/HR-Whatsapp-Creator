@@ -184,14 +184,14 @@ Talent Acquisition Specialist
   }
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '100%', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>WhatsApp Link Generator</h1>
       <p style={{ textAlign: 'center', marginBottom: '30px' }}>
         Upload CSV/Excel or paste data to generate personalized messages and links.
       </p>
 
-      <div style={{ width: '100%' }}>
-        <div style={{ width: '100%' }}>
+      <div style={{ width: '100%', maxWidth: '100%' }}>
+        <div style={{ width: '100%', maxWidth: '100%' }}>
           <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px', borderRadius: '8px' }}>
             <h2>Import Candidates</h2>
             <div style={{ marginBottom: '10px' }}>
@@ -242,43 +242,43 @@ Talent Acquisition Specialist
               </div>
             )}
 
-          <div style={{ border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden' }}>
-            <div style={{ padding: '10px', borderBottom: '1px solid #ccc', backgroundColor: '#f5f5f5' }}>
+          <div style={{ border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden', width: '100%' }}>
+            <div style={{ padding: '10px', borderBottom: '1px solid #ccc', backgroundColor: '#f5f5f5', width: '100%' }}>
               <span style={{ marginRight: '20px' }}>Total: {processed.out.length}</span>
               <span style={{ marginRight: '20px' }}>Missing JD: {processed.missing.length}</span>
-                    <button
+              <button
                 style={{ marginRight: '10px', padding: '8px 16px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                      disabled={!processed.out.length}
-                      onClick={() => exportCSV(processed.out, 'whatsapp_links.csv')}
-                    >
+                disabled={!processed.out.length}
+                onClick={() => exportCSV(processed.out, 'whatsapp_links.csv')}
+              >
                 Download CSV
-                    </button>
-                    <button
+              </button>
+              <button
                 style={{ padding: '8px 16px', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                      disabled={!processed.missing.length}
-                      onClick={() => exportCSV(processed.missing, 'missing_jd_links.csv')}
-                    >
+                disabled={!processed.missing.length}
+                onClick={() => exportCSV(processed.missing, 'missing_jd_links.csv')}
+              >
                 Export Missing JD Report
-                    </button>
+              </button>
+            </div>
+
+            <div style={{ padding: '10px', width: '100%' }}>
+              <div style={{ marginBottom: '10px' }}>
+                <button
+                  style={{ marginRight: '10px', padding: '8px 16px', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', backgroundColor: activeTab === 'results' ? '#e0e0e0' : 'white' }}
+                  onClick={() => setActiveTab('results')}
+                >
+                  Results
+                </button>
+                <button
+                  style={{ padding: '8px 16px', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', backgroundColor: activeTab === 'missing' ? '#e0e0e0' : 'white' }}
+                  onClick={() => setActiveTab('missing')}
+                >
+                  Missing JD Links
+                </button>
               </div>
 
-            <div style={{ padding: '10px' }}>
-              <div style={{ marginBottom: '10px' }}>
-                  <button
-                  style={{ marginRight: '10px', padding: '8px 16px', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', backgroundColor: activeTab === 'results' ? '#e0e0e0' : 'white' }}
-                    onClick={() => setActiveTab('results')}
-                  >
-                  Results
-                  </button>
-                  <button
-                  style={{ padding: '8px 16px', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', backgroundColor: activeTab === 'missing' ? '#e0e0e0' : 'white' }}
-                    onClick={() => setActiveTab('missing')}
-                  >
-                  Missing JD Links
-                  </button>
-                </div>
-
-              <div style={{ overflowX: 'auto' }}>
+              <div style={{ overflowX: 'auto', width: '100%' }}>
                 {activeTab === 'results' ? (
                   <ResultsTable data={processed.out} />
                 ) : (
@@ -348,7 +348,7 @@ function ResultsTable({ data }) {
     <div style={{ fontSize: '14px', color: '#666' }}>No data yet. Upload or paste to begin.</div>
   )
   return (
-    <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
+    <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse', minWidth: '100%' }}>
       <thead>
         <tr style={{ backgroundColor: '#f5f5f5' }}>
           <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #ccc' }}>Name</th>
